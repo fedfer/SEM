@@ -26,14 +26,24 @@ strings = c("DEMO*.XPT","BMX*.XPT","BPX*.XPT","ALB_CR*.XPT",
             "APOB*.XPT","UADM_I*.XPT","UTAS_I*.XPT","CHLMDA_I*.XPT",
             "TCHOL_I*.XPT","CRCO_I*.XPT","CBC_I*.XPT","CUSEZN_I*.XPT",
             "COT_I*.XPT","UCOT_I*.XPT","DEET_I*.XPT","FERTIN_I",
-            "FLDEP_I*.XPT","FLDEW_I*.XPT")
+            "FLDEP_I*.XPT","FLDEW_I*.XPT","FOLATE_I*.XPT","FOLFMS_I*.XPT",
+            "GHB_I*.XPT","SSNEON_I*.XPT","UIO_I*.XPT",
+            "PBCD_I*.XPT","UHG_I*.XPT","IHGEM_I*.XPT","UM_I*.XPT",
+            "PFAS_I*.XPT","PHTHTE_I*.XPT","TST_I*.XPT","UAS_I*.XPT",
+            "BIOPRO_I*.XPT","TRICH_I*.XPT","UVOC_I*.XPT",
+            "VOCWB_I*.XPT")
 
-names = c("Demographics","Body_Measures","Blood_pressure",
-          "Albumin_Creatinine_Urine","Apolipoprotein","Diamines",
-          "Arsernic_Urine","Chlamydia","Cholesterol",
-          "Chromium_Cobalt ","blood_count","copper_etc",
+
+names = c("demographics","body_measures","blood_pressure",
+          "albumin_creatinine_crine","apolipoprotein","diamines",
+          "arsernic_urine","chlamydia","cholesterol",
+          "chromium_cobalt ","blood_count","copper_etc",
           "cotinine","cotinine_urine","deet","ferritin",
-          "fluoride_plasma","fluoride_water")
+          "fluoride_plasma","fluoride_water","folate","folate_serum",
+          "glycohemoglobin","neonicotinoids","iodine","metals_blood",
+          "mercury_urine","mercury_blood","metals_urine","pfas",
+          "phthalate","steroid","spec_arsernic_urine","bio",
+          "trichomonas","voc_urine","voc_blood")
 
 data = tibble(names, strings) %>% 
   mutate(files = map(strings, function(s) get_files(s, years)),
@@ -41,7 +51,7 @@ data = tibble(names, strings) %>%
 
 # Demographics
 # https://wwwn.cdc.gov/nchs/nhanes/Search/DataPage.aspx?Component=Demographics&CycleBeginYear=2015
-people_nhanes = data %>%
+people = data %>%
   filter(names == "Demographics") %>%
   select(data) %>%
   unnest() %>%
@@ -57,8 +67,328 @@ people_nhanes = data %>%
 # DMDMARTL: Marital status
 # RIDEXPRG: Pregnancy status at exam
 
-# For chemicals
+# For chemicals and effect modifiers
 #https://wwwn.cdc.gov/nchs/nhanes/Search/DataPage.aspx?Component=Laboratory&CycleBeginYear=2015
+
+# Volatile Organic Compounds and Trihalomethanes/MTBE - Blood (VOCWB_I)
+voc_blood = data %>%
+  filter(names == "voc_blood") %>%
+  select(data) %>%
+  unnest() %>%
+  #filter(SEQN %in% chem_nhanes$SEQN) %>%
+  select()
+# LBX2DF Blood 2,5-Dimethylfuran (ng/mL)
+# LBX4CE: Blood 1,1,1,2-Tetrachloroethane (ng/mL)
+# LBXV06: Blood Hexane (ng/mL)
+# LBXV07N: Blood Heptane (ng/mL)
+# LBXV08N: Blood Octane (ng/mL)
+# LBXV1: Blood 1,2-Dichlorobenzene (ng/mL)
+# LBXV2A: Blood 1,2-Dichloroethane (ng/mL)
+# LBXV3B: Blood 1,3-Dichlorobenzene (ng/mL)
+# LBXV4C: Blood Tetrachloroethene (ng/mL)
+# LBXVBF: Blood Bromoform (ng/mL)
+# LBXVBM: Blood Bromodichloromethane (ng/mL)
+# LBXVBZ: Blood Benzene (ng/mL)
+# LBXVBZN: Blood Benzonitrile (ng/mL) 
+# LBXVC6: Blood Cyclohexane (ng/mL)
+# LBXVCB: Blood Chlorobenzene (ng/mL)
+# LBXVCF: Blood Chloroform (ng/mL)
+# LBXVCM: Blood Dibromochloromethane (ng/mL)
+# LBXVCT: Blood Carbon Tetrachloride (ng/mL)
+# LBXVDB: Blood 1,4-Dichlorobenzene (ng/mL)
+# LBXVDE: Blood 1,2-Dibromoethane (ng/ml)
+# LBXVDEE: Blood Diethyl Ether (ng/mL)
+# LBXVDX: Blood 1,4-Dioxane (ng/mL)
+# LBXVEA: Blood Ethyl Acetate (ng/mL)
+# LBXVEB: Blood Ethylbenzene (ng/mL)
+# LBXVEC: Blood Chloroethane (ng/mL)
+# LBXVFN: Blood Furan (ng/ml)
+# LBXVIBN: Blood Isobutyronitrile (ng/mL)
+# LBXVIPB: Blood Isopropylbenzene (ng/ml)
+# LBXVMC: Blood Methylene Chloride (ng/mL)
+# LBXVMCP: Blood Methylcyclopentane (ng/mL)
+# LBXVME: Blood MTBE (ng/mL)
+# LBXVNB: Blood Nitrobenzene (ng/mL)
+# LBXVOX: Blood o-Xylene (ng/mL)
+# LBXVTC: Blood Trichloroethene (ng/mL)
+# LBXVTE: Blood 1,1,1-Trichloroethane (ng/mL)
+# LBXVTFT: Blood ααα-Trifluorotoluene (ng/mL)
+# LBXVTHF: Blood Tetrahydrofuran (ng/mL)
+# LBXVTO: Blood Toluene (ng/mL)
+# LBXVTP: Blood 1,2,3-Trichloropropane (ng/ml)
+# LBXVVB: Blood Vinyl Bromide (ng/mL)
+# LBXVXY: Blood m-/p-Xylene (ng/mL)
+
+# Volatile Organic Compound (VOC) Metabolites - Urine (UVOC_I)
+voc_urine = data %>%
+  filter(names == "voc_urine") %>%
+  select(data) %>%
+  unnest() %>%
+  #filter(SEQN %in% chem_nhanes$SEQN) %>%
+  select(URXAAM,URXAMC,URXATC,URXBMA,URXBPM,
+         URXCEM,URXCYHA,URXCYM,URX1DC,
+         URX2DC,URXDHB,URXDPM,URXGAM,URXHEN,
+         URXHPM,URXHP2,URXIPM1,URXIPM3,URXMAD,
+         URX2MH,URX34M,URXMB1,URXMB2,URXMB3,
+         URXPHE,URXPHG,URXPMA,URXPMM,URXTCV)
+# URXAAM: N-Acetyl-S-(2-carbamoylethyl)-L-cysteine (ng/mL)
+# URXAMC: N-Acetyl-S-(N-methylcarbamoyl)-L-cysteine (ng/mL)
+# URXATC: 2-Aminothiazoline-4-carboxylic acid (ng/mL)
+# URXBMA: N-Acetyl-S-(benzyl)-L-cysteine (ng/mL)
+# URXBPM: N-Acetyl-S-(n-propyl)-L-cysteine (ng/mL)
+# URXCEM: N-Acetyl-S-(2-carboxyethyl)-L-cysteine (ng/mL)
+# URXCYHA: N-Acetyl-S-(1-cyano-2-hydroxyethyl)-L-cysteine (ng/mL)
+# URXCYM: N-Acetyl-S-(2-cyanoethyl)-L-cysteine (ng/mL)
+# URX1DC: N-Acetyl-S-(1,2-dichlorovinyl)-L-cysteine (ng/mL)
+# URX2DC: N-Acetyl-S-(2,2-dichlorovinyl)-L-cysteine (ng/mL)
+# URXDHB: N-Acetyl-S-(3,4-dihydroxybutyl)-L-cysteine (ng/mL)
+# URXDPM: N-Acetyl-S-(dimethylphenyl)-L-cysteine (ng/mL)
+# URXGAM: N-Acetyl-S-(2-carbamoyl-2-hydroxyethyl)-L-cysteine (ng/mL)
+# URXHEN: N-Acetyl-S-(2-hydroxyethyl)-L-cysteine (ng/mL)
+# URXHPM: N-Acetyl-S-(3-hydroxypropyl)-L-cysteine (ng/mL)
+# URXHP2: N-Acetyl-S-(2-hydroxypropyl)-L-cysteine (ng/mL)
+# URXIPM1: N-Acetyl-S-(2-hydroxy-3-methyl-3-butenyl)-L-cysteine +N-Acetyl-S-(2-hydroxy-2-methyl-3-butenyl)-L-cysteine
+# URXIPM3: N-Acetyl- S- (4- hydroxy- 2- methyl- 2- butenyl)- L- cysteine (ng/mL)
+# URXMAD Mandelic acid (ng/mL)
+# URX2MH: 2-Methylhippuric acid (ng/mL)
+# URX34M: 3- and 4-Methylhippuric acid (ng/mL)
+# URXMB1: N-Acetyl-S-(1-hydroxymethyl-2-propenyl)-L-cysteine (ng/mL)
+# URXMB2: N-Acetyl-S-(2-hydroxy-3-butenyl)-L-cysteine (ng/mL)
+# URXMB3: N-Acetyl-S-(4-hydroxy-2-butenyl)-L-cysteine (ng/mL)
+# URXPHE: N-Acetyl-S-(phenyl-2-hydroxyethyl)-L-cysteine (ng/mL)
+# URXPHG: Phenylglyoxylic acid (ng/mL)
+# URXPMA: N-Acetyl-S-(phenyl)-L-cysteine (ng/mL)
+# URXPMM: N-Acetyl-S-(3-hydroxypropyl-1-methyl)-L-cysteine (ng/mL)
+# URXTCV: N-Acetyl-S-(trichlorovinyl)-L-cysteine (ng/mL)
+
+# Trichomonas - Urine (TRICH_I)
+trichomonas = data %>%
+  filter(names == "trichomonas") %>%
+  select(data) %>%
+  unnest() %>%
+  #filter(SEQN %in% chem_nhanes$SEQN) %>%
+  select(URXUTRI) 
+# URXUTRI: Trichomonas, Urine
+
+# Standard Biochemistry Profile (BIOPRO_I)
+bio = data %>%
+  filter(names == "bio") %>%
+  select(data) %>%
+  unnest() %>%
+  #filter(SEQN %in% chem_nhanes$SEQN) %>%
+  select(LBXSATSI,LBXSAL,LBXSAPSI,LBXSASSI,
+         LBXSC3SI,LBXSBU,LBXSCLSI,LBXSCH,
+         LBXSCK,LBXSCR,LBXSGTSI,LBXSGL,LBXSIR,LBDSLDSI,
+         LBXSPH,LBXSKSI,LBXSNASI,LBXSTB,LBXSCA,LBXSTP,
+         LBXSTR,LBXSUA) 
+# LBXSATSI: Alanine Aminotransferase (ALT) (U/L)
+# LBXSAL: Albumin, refrigerated serum (g/dL)
+# LBXSAPSI: Alkaline Phosphatase (ALP) (U/L)
+# LBXSASSI: Aspartate Aminotransferase (AST) (U/L)
+# LBXSC3SI: Bicarbonate (mmol/L)
+# LBXSBU: Blood Urea Nitrogen (g/dL)
+# LBXSCLSI: Chloride (mmol/L)
+# LBXSCH: Cholesterol, refrigerated serum (mg/dL)
+# LBXSCK: Creatine Phosphokinase (CPK) (IU/L)
+# LBXSCR: Creatinine, refrigerated serum (mg/dL)
+# LBXSGTSI: Gamma Glutamyl Transferase (GGT) (U/L)
+# LBXSGL: Glucose, refrigerated serum (mg/dL)
+# LBXSIR: Iron, refrigerated serum (ug/dL)
+# LBDSLDSI: Lactate Dehydrogenase (LDH) (U/L)
+# LBXSPH: Phosphorus (mg/dL)
+# LBXSKSI: Potassium (mmol/L)
+# LBXSNASI: Sodium (mmol/L)
+# LBXSTB: Total Bilirubin (mg/dL)
+# LBXSCA: Total Calcium (mg/dL)
+# LBXSTP: Total Protein (g/dL)
+# LBXSTR: Triglycerides, refrig serum (mg/dL)
+# LBXSUA: Uric Acid (mg/dL)
+
+# Speciated Arsenics - Urine (UAS_I)
+spec_arsernic_urine = data %>%
+  filter(names == "spec_arsernic_urine") %>%
+  select(data) %>%
+  unnest() %>%
+  select(URXUAS3,URXUAS5,URXUAB,URXUAC,
+         URXUDMA,URXUMMA)
+# URXUAS3: Urinary Arsenous Acid
+# URXUAS5: Urinary Arsenic acid
+# URXUAB: Urinary Arsenobetaine
+# URXUAC: Urinary Arsenocholine
+# URXUDMA: Urinary Dimethylarsinic Acid
+# URXUMMA: Urinary Monomethylarsonic Acid
+
+
+# Sex Steroid Hormone - Serum (TST_I)
+steroid  = data %>%
+  filter(names == "steroid") %>%
+  select(data) %>%
+  unnest() %>%
+  #filter(SEQN %in% chem_nhanes$SEQN) %>%
+  select(LBXTST,LBXEST,LBXSHBG)
+# LBXTST: Testosterone, total (ng/dL)
+# LBXEST: Estradiol (pg/mL)
+# LBXSHBG: SHBG (nmol/L)
+
+# Phthalates and Plasticizers Metabolites - Urine (PHTHTE_I)
+phthalates  = data %>%
+  filter(names == "phthalates") %>%
+  select(data) %>%
+  unnest() %>%
+  #filter(SEQN %in% chem_nhanes$SEQN) %>%
+  select(URXCNP,URXCOP,URXECP,URXHIBP,URXMBP,URXMC1,
+         URXMCOH,URXMEP,URXMHBP,URXMHH,URXMHNC,URXMHP,
+         URXMIB,URXMNP,URXMOH,URXMZP)
+# URXCNP:	Mono(carboxyisononyl) phthalate (ng/mL)	
+# URXCOP:	Mono(carboxyisoctyl) phthalate (ng/mL)
+# URXECP:	Mono-2-ethyl-5-carboxypentyl phthalate (ng/mL)	
+# URXHIBP:	MHIBP phthalate (ng/mL)	
+# URXMBP:	Mono-n-butyl phthalate (ng/mL)	
+# URXMC1:	Mono-(3-carboxypropyl) phthalate (ng/mL)	
+# URXMCOH:	MCOCH phthalate (ng/mL)	
+# URXMEP:	Mono-ethyl phthalate (ng/mL)	
+# URXMHBP:	Mono-3-hydroxy-n-butyl phthalate (ng/mL)	
+# URXMHH:	Mono-(2-ethyl-5-hydroxyhexyl) phthalate (ng/mL)	
+# URXMHNC:	Cyclohexane 1,2-dicarboxylic acid monohydroxy isononyl ester (ng/mL)	
+# URXMHP:	Mono-(2-ethyl)-hexyl phthalate (ng/mL)	
+# URXMIB:	Mono-isobutyl phthalate (ng/mL)	
+# URXMNP:	Mono-isononyl phthalate (ng/mL)	
+# URXMOH:	Mono-(2-ethyl-5-oxohexyl) phthalate (ng/mL)	
+# URXMZP:	Mono-benzyl phthalate (ng/mL)
+
+# Perfluoroalkyl and Polyfluoroalkyl (PFAS_I)
+pfas  = data %>%
+  filter(names == "pfas") %>%
+  select(data) %>%
+  unnest() %>%
+  #filter(SEQN %in% chem_nhanes$SEQN) %>%
+  select(LBXPFDE,LBXPFHS,LBXMPAH,LBXPFNA,LBXPFUA,
+         LBXPFDO,LBXNFOA,LBXBFOA,LBXNFOS,LBXMFOS)
+# LBXPFDE: Perfluorodecanoic acid (ng/mL)
+# LBXPFHS: Perfluorohexane sulfonic acid (ng/mL)
+# LBXMPAH: 2-(N-methyl-PFOSA)acetic acid (ng/mL)
+# LBXPFNA: Perfluorononanoic acid (ng/mL)
+# LBXPFUA: Perfluoroundecanoic acid (ng/mL)
+# LBXPFDO: Perfluorododecanoic acid (ng/mL)
+# LBXNFOA: n-perfluorooctanoic acid (ng/mL)
+# LBXBFOA: Br. perfluorooctanoic acid iso (ng/mL)
+# LBXNFOS: n-perfluorooctane sulfonic acid (ng/mL)
+# LBXMFOS: Sm-PFOS (ng/mL)
+
+# Metals - Urine (UM_I)
+metals_urine  = data %>%
+  filter(names == "metals_urine") %>%
+  select(data) %>%
+  unnest() %>%
+  #filter(SEQN %in% chem_nhanes$SEQN) %>%
+  select(URXUBA,URXUCD,URXUCO,URXUCS,URXUMO,
+         URXUMN,URXUPB,URXUSB,URXUSN,URXUSR,
+         URXUTL,URXUTU,URXUUR)
+# URXUBA: Barium, urine (ug/L)
+# URXUCD: Cadmium, urine (ug/L)
+# URXUCO: Cobalt, urine (ug/L)
+# URXUCS: Cesium, urine (ug/L)
+# URXUMO: Molybdenum, urine (ug/L)
+# URXUMN: Manganese, urine (ug/L)
+# URXUPB: Lead, urine (ug/L)
+# URXUSB: Antimony, urine (ug/L)
+# URXUSN: Tin, urine (ug/L)
+# URXUSR: Strontium, urine (ug/L)
+# URXUTL: Thallium, urine (ug/L)
+# URXUTU: Tungsten, urine (ug/L)
+# URXUUR: Uranium, urine (ug/L)
+
+# Mercury: Inorganic, Ethyl and Methyl – Blood (IHGEM_I)
+mercury_blood  = data %>%
+  filter(names == "mercury_blood") %>%
+  select(data) %>%
+  unnest() %>%
+  #filter(SEQN %in% chem_nhanes$SEQN) %>%
+  select(LBXIHG,LBXBGE,LBXBGM)
+# LBXIHG: Mercury, inorganic (ug/L)
+# LBXBGE: Mercury, ethyl (ug/L)
+# LBXBGM: Mercury, methyl (ug/L)
+
+
+# Mercury - Urine (UHG_I)
+mercury_urine  = data %>%
+  filter(names == "mercury_urine") %>%
+  select(data) %>%
+  unnest() %>%
+  #filter(SEQN %in% chem_nhanes$SEQN) %>%
+  select(URXUHG)
+# URXUHG: Urine Mercury (ng/mL)
+
+# Lead, Cadmium, Total Mercury, Selenium & Manganese - Blood (PBCD_I)
+metals_blood  = data %>%
+  filter(names == "metals_blood") %>%
+  select(data) %>%
+  unnest() %>%
+  #filter(SEQN %in% chem_nhanes$SEQN) %>%
+  select(LBXBPB,LBXBCD,LBXTHG,LBXBSE,LBXBMN)
+# LBXBPB: Blood lead (ug/dL)
+# LBXBCD: Blood cadmium (ug/L)
+# LBXTHG: Blood mercury, total (ug/L)
+# LBXBSE: Blood selenium (ug/L)
+# LBXBMN: Blood manganese (ug/L)
+
+# Iodine - Urine (UIO_I)
+iodine  = data %>%
+  filter(names == "iodine") %>%
+  select(data) %>%
+  unnest() %>%
+  #filter(SEQN %in% chem_nhanes$SEQN) %>%
+  select(URXUIO)
+# URXUIO: Iodine, urine (ng/mL)
+
+# Neonicotinoids - Urine - Surplus (SSNEON_I)
+neonicotinoids  = data %>%
+  filter(names == "neonicotinoids") %>%
+  select(data) %>%
+  unnest() %>%
+  #filter(SEQN %in% chem_nhanes$SEQN) %>%
+  select(SSIMID,SSACET,SSCLOT,
+         SSTHIA,SSOHIM,SSAND)
+# SSIMID: Imidacloprid (ug/L)
+# SSACET: Acetamiprid (ug/L)
+# SSCLOT: Clothianidin (ug/L)
+# SSTHIA: Thiacloprid (ug/L)
+# SSOHIM: 5-Hydroxyimidacloprid (ug/L)
+# SSAND - N-Desmethylacetamiprid (ug/L)
+
+# Glycohemoglobin (GHB_I)
+glycohemoglobin  = data %>%
+  filter(names == "glycohemoglobin") %>%
+  select(data) %>%
+  unnest() %>%
+  #filter(SEQN %in% chem_nhanes$SEQN) %>%
+  select(LBXGH)
+# LBXGH: Glycohemoglobin (%)
+
+#Folate Forms - Total & Individual - Serum (FOLFMS_I)
+folate_serum  = data %>%
+  filter(names == "folate_serum") %>%
+  select(data) %>%
+  unnest() %>%
+  #filter(SEQN %in% chem_nhanes$SEQN) %>%
+  select(LBDFOT,LBDSF1LC,LBDSF2LC,LBDSF3LC,
+         LBDSF4LC,LBDSF5LC,LBDSF6LC)
+# LBDFOT: Serum total folate (ng/mL)
+# LBDSF1LC: 5-Methyl-tetrahydrofolate cmt
+# LBDSF2LC: Folic acid cmt
+# LBDSF3LC: 5-Formyl-tetrahydrofolate cmt
+# LBDSF4LC: Tetrahydrofolate cmt
+# LBDSF5LC: 5,10-Methenyl-tetrahydrofolate cmt
+# LBDSF6LC: Mefox oxidation product cmt
+
+# Folate - RBC (FOLATE_I)
+folate  = data %>%
+  filter(names == "folate") %>%
+  select(data) %>%
+  unnest() %>%
+  #filter(SEQN %in% chem_nhanes$SEQN) %>%
+  select(LBDRFO)
+# LBDRFO: RBC folate (ng/mL)
 
 # Fluoride - Water (FLDEW_I)
 fluoride_water  = data %>%
@@ -120,7 +450,6 @@ cotinine_urine = data %>%
 # URDTNE6: TNE - 3 (nmol/mL)
 # URDTNE7: TNE - 3 (nmol/mL)
 
-
 # Cotinine and Hydroxycotinine - Serum (COT_I)
 cotinine = data %>%
   filter(names == "cotinine") %>%
@@ -130,7 +459,6 @@ cotinine = data %>%
   select(LBXCOT,LBXHCT)
 # LBXCOT: Cotinine, Serum (ng/mL)
 # LBXHCT: Hydroxycotinine, Serum (ng/mL)
-
 
 # Copper, Selenium & Zinc - Serum (CUSEZN_I)
 copper_etc = data %>%
@@ -144,7 +472,7 @@ copper_etc = data %>%
 
 # Chromium & Cobalt (CRCO_I)
 chromium_cobalt = data %>%
-  filter(names == "Chromium_Cobalt") %>%
+  filter(names == "chromium_cobalt") %>%
   select(data) %>%
   unnest() %>%
   #filter(SEQN %in% chem_nhanes$SEQN) %>%
@@ -156,7 +484,7 @@ chromium_cobalt = data %>%
 
 # Cholesterol - Total (TCHOL_I)
 chol = data %>%
-  filter(names == "Cholesterol") %>%
+  filter(names == "cholesterol") %>%
   select(data) %>%
   unnest() %>%
   #filter(SEQN %in% chem_nhanes$SEQN) %>%
@@ -165,7 +493,7 @@ chol = data %>%
 
 # Arsenic - Total - Urine (UTAS_I)
 arsenic = data %>%
-  filter(names == "Arsernic_Urine") %>%
+  filter(names == "arsernic_urine") %>%
   select(data) %>%
   unnest() %>%
   #filter(SEQN %in% chem_nhanes$SEQN) %>%
@@ -174,7 +502,7 @@ arsenic = data %>%
 
 #Chlamydia - Urine (CHLMDA_I)
 chlamydia = data %>%
-  filter(names == "Chlamydia") %>%
+  filter(names == "chlamydia") %>%
   select(data) %>%
   unnest() %>%
   #filter(SEQN %in% chem_nhanes$SEQN) %>%
@@ -183,7 +511,7 @@ chlamydia = data %>%
 
 # Albumin & Creatinine - Urine
 albumin_creatinine_nhanes = data %>%
-  filter(names == "Albumin_Creatinine_Urine") %>%
+  filter(names == "albumin_creatinine_urine") %>%
   select(data) %>%
   unnest() %>%
   #filter(SEQN %in% chem_nhanes$SEQN) %>%
@@ -193,7 +521,7 @@ albumin_creatinine_nhanes = data %>%
 
 #Apolipoprotein
 apolipoprotein_nhanes = data %>%
-  filter(names == "Apolipoprotein") %>%
+  filter(names == "apolipoprotein") %>%
   select(data) %>%
   unnest() %>%
   #filter(SEQN %in% chem_nhanes$SEQN) %>%
@@ -202,8 +530,8 @@ apolipoprotein_nhanes = data %>%
 
 
 # Aromatic Diamines - Urine (UADM_I)
-diamines_nhanes = data %>%
-  filter(names == "Diamines") %>%
+diamines = data %>%
+  filter(names == "diamines") %>%
   select(data) %>%
   unnest() %>%
   #filter(SEQN %in% chem_nhanes$SEQN) %>%
@@ -214,9 +542,6 @@ diamines_nhanes = data %>%
 # URX4MDA: 4MDA (ng/mL)
 # URX5NDA: 1,5-Diaminonaphthalene (5NDA) (ng/mL)
 # URXPPDA: p-Phenylenediamine (PPDA) (ng/mL)
-
-
-
 
 
 
@@ -248,116 +573,6 @@ blood_count = data %>%
 
 
 
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-phthalates_nhanes = c("URXMBP", "URXMIB", "URXMEP", 
-                      "URXMZP", "URXMCP", "URXECP", 
-                      "URXMHH", "URXMOH", "URXMHP")
-# URXMBP: Mono-n-butyl phthalate (ng/mL)
-# URXMIB: Mono-isobutyl phthalate
-# URXMEP: Mono-ethyl phthalate (ng/mL)
-# URXMZP: Mono-benzyl phthalate (ng/mL)
-# URXMCP: Mono-cyclohexyl phthalate (ng/mL)
-# URXECP: Mono-2-ethyl-5-carboxypentyl phthalate
-# URXMHH: Mono-(2-ethyl-5-hydroxyhexyl) phthalate
-# URXMOH: Mono-(2-ethyl-5-oxohexyl) phthalate
-# URXMHP: Mono-(2-ethyl)-hexyl phthalate (ng/mL)
-
-
-chem_nhanes = data %>%
-  filter(names == "Phthlates") %>%
-  select(data) %>%
-  unnest() %>%
-  select(SEQN, phthalates_nhanes) %>%
-  filter_all(all_vars(!is.na(.)))
-# SEQN: Respondent sequence number
-
-
-bmi_nhanes = data %>%
-  filter(names == "Body_Measures") %>%
-  select(data) %>%
-  unnest() %>%
-  filter(SEQN %in% chem_nhanes$SEQN) %>%
-  select(BMXBMI, BMXWAIST)
-# BMXBMI: Body Mass Index (kg/m**2)
-# BMXWAIST: Waist Circumference (cm)
-
-# Only 2009-2010 and 2011-2012
-pesticides_nhanes = data %>%
-  filter(names == "Organochlorine_Pesticides") %>%
-  select(data) %>%
-  unnest() %>%
-  filter(SEQN %in% chem_nhanes$SEQN) %>%
-  select(URX14D,URXDCB)
-# URX14D: 2,5-dichlorophenol (ug/L) result
-# URXDCB: 2,4-dichlorophenol (ug/L) result
-
-
-# people that have Phalates do not have metals
-metals_nhanes = data %>%
-  filter(names == "Metals") %>%
-  select(data) %>%
-  unnest() %>%
-  #filter(SEQN %in% chem_nhanes$SEQN) %>%
-  select(URXUBA,URXUBE,URXUCD,
-         URXUCO,URXUCS,URXUMO,
-         URXUPB,URXUPT,URXUSB,
-         URXUTL,URXUTU,URXUUR)
-# URXUBA: Barium, urine (ug/L)
-# URXUBE: Beryllium, urine (ug/L)
-# URXUCD: Cadmium, urine (ug/L)
-# URXUCO: Cobalt, urine (ug/L)
-# URXUCS: Cesium, urine (ug/L)
-# URXUMO: Molybdenum, urine (ug/L)
-# URXUPB: Lead, urine (ug/L)
-# URXUPT: Platinum, urine (ug/L)
-# URXUSB: Antimony, urine (ug/L)
-# URXUTL: Thallium, urine (ug/L)
-# URXUTU: Tungsten, urine (ug/L)
-# URXUUR: Uranium, urinary (ug/L)
-
-# Missing year 2013-2014
-phenols_nhanes = data %>%
-  filter(names == "Phenols") %>%
-  select(data) %>%
-  unnest() %>%
-  filter(SEQN %in% chem_nhanes$SEQN) %>%
-  select(URXBPH,URX4TO,URXTRS,URXBP3,
-         URXPPB,URXBUP,URXEPB,URXMPB)
-# URXBPH: Urinary Bisphenol A
-# URX4TO: Urinary 4-tert-octyl 
-# URXTRS: Urinary 2,4,4’-Trichloro-2’-hydroxyphenyl ether (Triclosan)		
-# URXBP3: Urinary 2-Hydroxy-4-metoxybenzophenone (Benzophenone-3)	
-# URXPPB: Urinary Propyl paraben	
-# URXBUP: Urinary Butyl paraben		
-# URXEPB: Urinary Ethyl paraben	
-# URXMPB: Urinary Methyl paraben	
-
-chol_nhanes = data %>%
-  filter(names == "Cholesterol") %>%
-  select(data) %>%
-  unnest() %>%
-  filter(SEQN %in% chem_nhanes$SEQN) %>%
-  select(LBXTC)
-# LBXTC: Total Cholesterol (mg/dL)
 
 
 data_nhanes = data.frame(chem_nhanes,people_nhanes,bmi_nhanes,
