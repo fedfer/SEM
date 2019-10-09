@@ -25,7 +25,7 @@ get_data <- function(files){
 strings = c("DEMO*.XPT","BMX*.XPT","BPX*.XPT","ALB_CR*.XPT",
             "APOB*.XPT","UADM_I*.XPT","UTAS_I*.XPT","CHLMDA_I*.XPT",
             "TCHOL_I*.XPT","CRCO_I*.XPT","CBC_I*.XPT","CUSEZN_I*.XPT",
-            "COT_I*.XPT","UCOT_I*.XPT","DEET_I*.XPT","FERTIN_I",
+            "COT_I*.XPT","UCOT_I*.XPT","DEET_I*.XPT","FERTIN_I*.XPT",
             "FLDEP_I*.XPT","FLDEW_I*.XPT","FOLATE_I*.XPT","FOLFMS_I*.XPT",
             "GHB_I*.XPT","SSNEON_I*.XPT","UIO_I*.XPT",
             "PBCD_I*.XPT","UHG_I*.XPT","IHGEM_I*.XPT","UM_I*.XPT",
