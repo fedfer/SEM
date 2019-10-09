@@ -1,8 +1,10 @@
 ## Reading in the NHANES datasets
 
-# Read in the Phtalate information
+# Missing body info
+
 library(SASxport)
 library(tidyverse)
+library(plyr)
 
 setwd("~/SEM/data")
 
