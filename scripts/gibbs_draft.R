@@ -32,6 +32,7 @@ m <- 2
 
 # Initialize variables--------------------------------------
 eta <- matrix(rnorm(n*k),n,k)
+eta.T <- t(eta)
 xi <- matrix(rnorm(n*m), n, m)
 Lambda_x <- matrix(0,p,k)
 Lambda_x.T <- t(Lambda_x)
@@ -76,8 +77,25 @@ for (i in 1:n) {
   mean <- covar %*% ( Lambda_y.T %*% solve(Phi) %*% Y[i, ] + solve(Sigma_xi) %*% Ga %*% eta[i, ] )
   xi[i, ] <- bayesSurv::rMVNorm(n = 1, mean = mean, Sigma = covar)
 }
-# With interaction terms, how do we deal with the many Omega
+# With interaction terms: to be completed
 
 
 # --- Update Gamma --- #
+# First, without interaction terms
+for (j in 1:m) {
+  # update Gamma by row
+  covar <- solve(diag(k) + (1/Sigma_xi[j, j]) * eta.T %*% eta)
+  mean <- covar %*% ( (1/Sigma_xi[j, j]) * eta.T %*%  xi[ , j])
+  Ga[j, ] <- bayesSurv::rMVNorm(n = 1, mean = mean, Sigma = covar) 
+}
+# With interaction terms: to be completed
+
+
+
+# --- Update eta --- #
+# Without interaction terms, conjugates
+
+
+
+
 
