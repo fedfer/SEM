@@ -44,6 +44,7 @@ Phi <- diag(1/phis)
 sig_xis <- rgamma(m, as, bs) # specification of as and bs?
 Sigma_xi <- diag(1/sig_xis)
 Ga <- matrix(rnorm(m*k), m, k)
+Ga.T <- t(Ga)
 
 
 # Full conditionals------------------------------------------------------------
@@ -60,14 +61,23 @@ phis <- (1 / ( bs + 0.5*apply(X = Ytil^2, MARGIN = 2, FUN = sum) ) ) * phis # sp
 Phi <- diag(1 / phis)
 
 # --- Update Sigma_xi ---#
-# How do we deal with the many Omega matrices?
+# First, without interaction terms
+xi_til <- xi - eta %*% Ga.T
+sig_xis <- rgamma(n = m, shape = as + 0.5*n, rate = 1)
+sig_xis <- (1 / ( bs + 0.5*apply(X = xi_til^2, MARGIN = 2, FUN = sum) ) ) * sig_xis
+Sigma_xi <- diag(1/sig_xis)
+# With interaction terms: to be completed
 
 # --- Update xi --- #
-# Advantage of this specific function of sampling from MVN? Also why specify package when calling the function?
+# Advantage of this specific function of sampling from MVN?
 for (i in 1:n) {
   # update xi matrix by row, without interaction terms
   covar <- solve(Lambda_y.T %*% solve(Phi) %*% Lambda_y + solve(Sigma_xi))
   mean <- covar %*% ( Lambda_y.T %*% solve(Phi) %*% Y[i, ] + solve(Sigma_xi) %*% Ga %*% eta[i, ] )
   xi[i, ] <- bayesSurv::rMVNorm(n = 1, mean = mean, Sigma = covar)
 }
+# With interaction terms, how do we deal with the many Omega
+
+
+# --- Update Gamma --- #
 
