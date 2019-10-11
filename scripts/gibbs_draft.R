@@ -18,6 +18,7 @@ p <- ncol(X)
 q <- ncol(Y)
 # k: specification?
 # m: specification?
+# a: how to choose?
 
 # For testing purposes--------------------------------------------------------
 X <- matrix(rnorm(3*4), 3, 4)
@@ -29,12 +30,14 @@ p <- ncol(X) # 4
 q <- ncol(Y) # 5
 k <- 2
 m <- 2
+a <- 1/2
 
 # Initialize variables--------------------------------------
 eta <- matrix(rnorm(n*k),n,k)
 eta.T <- t(eta)
 
 xi <- matrix(rnorm(n*m), n, m)
+xi.T <- t(xi)
 
 Lambda_x <- matrix(0,p,k)
 Lambda_x.T <- t(Lambda_x)
@@ -57,6 +60,13 @@ Sigma_eta <- diag(1/sig_etas)
 Ga <- matrix(rnorm(m*k), m, k)
 Ga.T <- t(Ga)
 
+tau <- rgamma(q,q*a,1/2) # try to make sense of this
+rhojh <- matrix(rexp(q*m,1/2),q,m)
+zetajh <- matrix(0,q,m)
+for (j in 1:q) {
+  zetajh[j, ] <- rdirichlet(1,rep(a,m))
+}
+Plam = rhojh*(zetajh^2)*matrix(rep(tau^2,m),q,m,byrow=F)
 
 
 # Full conditionals------------------------------------------------------------
@@ -88,6 +98,7 @@ for (i in 1:n) {
   mean <- covar %*% ( Lambda_y.T %*% solve(Phi) %*% Y[i, ] + solve(Sigma_xi) %*% Ga %*% eta[i, ] )
   xi[i, ] <- bayesSurv::rMVNorm(n = 1, mean = mean, Sigma = covar)
 }
+xi.T <- t(xi)
 # With interaction terms: to be completed
 
 
@@ -115,7 +126,20 @@ for (i in 1:n) {
 
 
 # --- Update Lambda_y --- #
+Plam = rhojh*(zetajh^2)*matrix(rep(tau^2,m),q,m,byrow=F)
+xi2 <- xi.T %*% xi
+zlams = rnorm(m*q)       # generate normal draws all at once
 
+for(j in 1:q) {
+  Llamt = chol(diag(Plam[j,]) + phis[j]*xi2)
+  Lambda_y[j,] = t(solve(Llamt,
+                       zlams[1:m + (j-1)*m]) + 
+                   solve(Llamt,
+                         solve(t(Llamt),
+                               phis[j] * xi.T %*% Y[,j])))
+}
+
+Lambda.T = t(Lambda)
 
 
 
