@@ -25,40 +25,51 @@ Y <- matrix(rnorm(3*5), 3, 5)
 as <- 1 # specification of these?
 bs <- 0.3 # speicifcation of these?
 n <- nrow(X)
-p <- ncol(X)
-q <- ncol(Y)
+p <- ncol(X) # 4
+q <- ncol(Y) # 5
 k <- 2
 m <- 2
 
 # Initialize variables--------------------------------------
 eta <- matrix(rnorm(n*k),n,k)
 eta.T <- t(eta)
+
 xi <- matrix(rnorm(n*m), n, m)
+
 Lambda_x <- matrix(0,p,k)
 Lambda_x.T <- t(Lambda_x)
+
 Lambda_y <- matrix(0, q, m)
 Lambda_y.T <- t(Lambda_y)
-ps <- rgamma(p,as,bs) # specification of as and bs?
+
+ps <- rgamma(p,as,bs) 
 Psi <- diag(1/ps)
-phis <- rgamma(q,as,bs) # specification of as and bs?
+
+phis <- rgamma(q,as,bs) 
 Phi <- diag(1/phis)
-sig_xis <- rgamma(m, as, bs) # specification of as and bs?
+
+sig_xis <- rgamma(m, as, bs)
 Sigma_xi <- diag(1/sig_xis)
+
+sig_etas <- rgamma(k, as, bs) # no prior on this -  how do we choose?
+Sigma_eta <- diag(1/sig_etas)
+
 Ga <- matrix(rnorm(m*k), m, k)
 Ga.T <- t(Ga)
+
 
 
 # Full conditionals------------------------------------------------------------
 # --- Update Psi --- #
 Xtil <- X - eta%*%Lambda_x.T
-ps <- rgamma(n = p, shape = as + 0.5*n, rate = 1) # specification of as?
-ps <- (1 / ( bs + 0.5*apply(X = Xtil^2, MARGIN = 2, FUN = sum) ) ) * ps # specification of bs?
+ps <- rgamma(n = p, shape = as + 0.5*n, rate = 1) 
+ps <- (1 / ( bs + 0.5*apply(X = Xtil^2, MARGIN = 2, FUN = sum) ) ) * ps
 Psi <- diag(1 / ps)
 
 # --- Update Phi ---#
 Ytil <- Y - xi %*% Lambda_y.T
-phis <- rgamma(n = q, shape = as + 0.5*n, rate = 1) # specification of as?
-phis <- (1 / ( bs + 0.5*apply(X = Ytil^2, MARGIN = 2, FUN = sum) ) ) * phis # specification of bs?
+phis <- rgamma(n = q, shape = as + 0.5*n, rate = 1)
+phis <- (1 / ( bs + 0.5*apply(X = Ytil^2, MARGIN = 2, FUN = sum) ) ) * phis
 Phi <- diag(1 / phis)
 
 # --- Update Sigma_xi ---#
@@ -88,12 +99,23 @@ for (j in 1:m) {
   mean <- covar %*% ( (1/Sigma_xi[j, j]) * eta.T %*%  xi[ , j])
   Ga[j, ] <- bayesSurv::rMVNorm(n = 1, mean = mean, Sigma = covar) 
 }
+Ga.T <- t(Ga) # update transpose of Gamma
 # With interaction terms: to be completed
 
 
-
 # --- Update eta --- #
-# Without interaction terms, conjugates
+# Without interaction terms, conjugate
+for (i in 1:n) {
+  print(paste("iteration", i))
+  # udpate eta matrix by row
+  covar <- solve( Ga.T %*%  chol2inv(chol(Sigma_xi)) %*% Ga + Lambda_x.T %*% chol2inv(chol(Psi)) %*% Lambda_x + Sigma_eta)
+  mean <- covar %*% ( Ga.T %*% chol2inv(chol(Sigma_xi)) %*% eta[i, ] + Lambda_x.T %*% chol2inv(chol(Psi)) %*% X[i, ] )
+  eta[i, ] <- bayesSurv::rMVNorm(n = 1, mean = mean, Sigma = covar)
+}
+
+
+# --- Update Lambda_y --- #
+
 
 
 
