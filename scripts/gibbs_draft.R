@@ -142,6 +142,12 @@ for(j in 1:q) {
 Lambda.T = t(Lambda)
 
 
+# --- Update rhojh --- #
+mujh = zetajh*matrix(rep(tau,m),q,m,byrow = F)/abs(Lambda_y) # seems to be different from what's in the paper?
+
+
+
+
 
 
 
