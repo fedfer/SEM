@@ -8,6 +8,7 @@ set.seed(42) # set random state
 # Libraries---------------------------------------------------------------
 library(bayesSurv) # package supporting the function `rMVNorm`
 library(MCMCpack)
+library(statmod)
 
 # Initialize parameters--------------------------------------------------------------
 # Y, X, nrun
@@ -143,7 +144,9 @@ Lambda.T = t(Lambda)
 
 
 # --- Update rhojh --- #
-mujh = zetajh*matrix(rep(tau,m),q,m,byrow = F)/abs(Lambda_y) # seems to be different from what's in the paper?
+mujh = zetajh*matrix(rep(tau,m),q,m,byrow = F)/abs(Lambda_y)
+rhojh <- matrix(statmod::rinvgauss(m*q, mujh),q,m,byrow = T)
+
 
 
 
