@@ -71,6 +71,7 @@ for (j in 1:q) {
 Plam = rhojh*(zetajh^2)*matrix(rep(tau^2,m),q,m,byrow=F)
 
 
+
 # Full conditionals------------------------------------------------------------
 # --- Update Psi --- #
 Xtil <- X - eta%*%Lambda_x.T
@@ -156,7 +157,15 @@ for(j in 1:q){
 }
 
 
-
+# --- Update zetajh --- #
+Tjh <- numeric(m)
+for(j in 1:q){
+  for(h in 1:m){
+    Tjh[h] = GIGrvg::rgig(n=1,lambda = a-1,psi = 1,
+                          chi = 2*abs(Lambda_y[j,h]))
+  }
+  zetajh[j,] = Tjh/sum(Tjh)
+}
 
 
 
