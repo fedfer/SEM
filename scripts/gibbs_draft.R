@@ -188,6 +188,7 @@ CUSP_update_Lambda <- function(Lambda, X, eta, eta.T, k, p, theta, ps,
                            solve(t(Llamt),
                                  ps[j] * eta.T %*% X[,j])))
   }
+  return(Lambda)
   
 }
 
@@ -210,17 +211,26 @@ CUSP_update_z_ind <- function(Lambda, X, eta, eta.T, k, p, theta, ps,
     }
     z_ind[h] <- sample(1:k,1,prob = P_z[,h])
   }
+  return(z_ind)
 }
 
-CUSP_update_v_omega_dir <- function(Lambda, X, eta, eta.T, k, p, theta, ps,
+CUSP_update_v <- function(Lambda, X, eta, eta.T, k, p, theta, ps,
                                     omega_dir, b_theta, a_theta, theta_inf, z_ind, P_z,
                                     v, alpha_prior){
-  # --- update v & omega_dir (FIN) --- #
+  # --- update v (FIN) --- #
   for (h in 1:(k-1)) {
     v[h] = rbeta(1,1+sum(z_ind == h), alpha_prior + sum(z_ind > h))
   }
+  return(v)
+}
+
+CUSP__update_omega_dir <- function(Lambda, X, eta, eta.T, k, p, theta, ps,
+                                   omega_dir, b_theta, a_theta, theta_inf, z_ind, P_z,
+                                   v, alpha_prior){
+  # --- update omega_dir (FIN) --- #
   omega_dir[1:(k-1)] = cumprod(1-v[1:(k-1)])*v[1:(k-1)]/(1-v[1:(k-1)])
   omega_dir[k] = prod(v[1:(k-1)])
+  return(omega_dir)
 }
 
 CUSP_update_theta_h <- function(Lambda, X, eta, eta.T, k, p, theta, ps,
@@ -234,6 +244,7 @@ CUSP_update_theta_h <- function(Lambda, X, eta, eta.T, k, p, theta, ps,
       theta[h] = theta_inf
     }
   }
+  return(theta)
 }
 
 # CUSP_update <- function(Lambda, X, eta, eta.T, k, p, theta, ps,
