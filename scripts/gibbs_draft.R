@@ -9,6 +9,7 @@ set.seed(42) # set random state
 library(bayesSurv) # package supporting the function `rMVNorm`
 library(MCMCpack)
 library(statmod)
+library(GIGrvg)
 
 # Initialize parameters--------------------------------------------------------------
 # Y, X, nrun
@@ -147,6 +148,12 @@ Lambda.T = t(Lambda)
 mujh = zetajh*matrix(rep(tau,m),q,m,byrow = F)/abs(Lambda_y)
 rhojh <- matrix(statmod::rinvgauss(m*q, mujh),q,m,byrow = T)
 
+
+# --- Update tau --- #
+for(j in 1:q){
+  tau[j] = GIGrvg::rgig(n=1,lambda = 1-m, psi = 1, 
+                        chi = 2*sum(abs(Lambda_y[j,])/zetajh[j,]))
+}
 
 
 
