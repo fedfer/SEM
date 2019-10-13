@@ -34,6 +34,15 @@ q <- ncol(Y) # 5
 k <- 2
 m <- 2
 a <- 1/2
+# Factorization hyperparameters
+# TODO: clean up factorization hyperparameters
+a_theta <- 2
+b_theta <- 2
+
+# PUT IN FUNCTION SIGNATURE
+theta_inf <- 0.05
+alpha_prior <-  p*floor(log(p)*3)/10
+
 
 # Initialize variables--------------------------------------
 eta <- matrix(rnorm(n*k),n,k)
@@ -70,6 +79,14 @@ for (j in 1:q) {
   zetajh[j, ] <- rdirichlet(1,rep(a,m))
 }
 Plam = rhojh*(zetajh^2)*matrix(rep(tau^2,m),q,m,byrow=F)
+
+P_z = matrix(0,k,k)
+z_ind = 1:k
+v = 1:k/k
+theta = rep(1,k)
+C_dir = numeric(k)
+C_dir[1:(k-1)] = cumprod(1-v[1:(k-1)])*v[1:(k-1)]/(1-v[1:(k-1)])
+C_dir[k] = prod(v[1:(k-1)])
 
 
 
@@ -172,6 +189,32 @@ for(j in 1:q){
 
 # TODO: specify omega_dir and other stuffs, check if things specified in the beginning of gibbs_CUSP is specified in the function signatures
 
+# --- Update Lambda_x --- #
+Lamdba_x <- CUSP_update_Lambda(Lambda = Lambda_x, X , eta, eta.T, k, p, theta, ps,
+                               omega_dir = C_dir, b_theta, a_theta, theta_inf, z_ind, P_z,
+                               v, alpha_prior)
+
+# --- Update z_ind --- #
+z_ind <- CUSP_update_z_ind(Lambda = Lambda_x, X , eta, eta.T, k, p, theta, ps,
+                           omega_dir = C_dir, b_theta, a_theta, theta_inf, z_ind, P_z,
+                           v, alpha_prior)
+
+# --- Update v --- #
+v <- CUSP_update_v(Lambda = Lambda_x, X , eta, eta.T, k, p, theta, ps,
+                   omega_dir = C_dir, b_theta, a_theta, theta_inf, z_ind, P_z,
+                   v, alpha_prior)
+
+# --- Update C_dir --- #
+C_dir <- CUSP__update_omega_dir(Lambda = Lambda_x, X , eta, eta.T, k, p, theta, ps,
+                                omega_dir = C_dir, b_theta, a_theta, theta_inf, z_ind, P_z,
+                                v, alpha_prior)
+
+# --- Update theta_h --- #
+theta <- CUSP_update_theta_h(Lambda = Lambda_x, X , eta, eta.T, k, p, theta, ps,
+                             omega_dir = C_dir, b_theta, a_theta, theta_inf, z_ind, P_z,
+                             v, alpha_prior)
+
+# Below are CUSP update functions
 CUSP_update_Lambda <- function(Lambda, X, eta, eta.T, k, p, theta, ps,
                                omega_dir, b_theta, a_theta, theta_inf, z_ind, P_z,
                                v, alpha_prior){
