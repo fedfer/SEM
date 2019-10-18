@@ -152,7 +152,7 @@ gibbs <- function(X, Y, nrun, burn, thin = 1, alpha_prior = NULL, theta_inf = 0.
   Phi_st <- array(0, c(nrun, q, q))
   Psi_st <- array(0, c(nrun, p, p))
   coeff_st <- array(0, c(nrun, q, p)) # Maybe a better name for this
-  
+  count <- 1
   
   
   
@@ -279,6 +279,17 @@ gibbs <- function(X, Y, nrun, burn, thin = 1, alpha_prior = NULL, theta_inf = 0.
     theta <- CUSP_update_theta_h(Lambda = Lambda_x, X , eta, eta.T, k, p, theta, ps,
                                  omega_dir = C_dir, b_theta, a_theta, theta_inf, z_ind, P_z,
                                  v, alpha_prior)
+    
+    # Store posterior samples
+    Phi_st[count, , ] <- Phi
+    Psi_st[count, , ] <- Psi
+    V_n <- solve(Lambda_x.T %*% solve(Psi) %*% Lambda_x + solve(Sigma_eta))
+    A_n <- V_n %*% Lambda_x.T %*% solve(Psi)
+    coeff_st[count, , ] <- Lambda_y %*% Ga %*% A_n
+    count <- count + 1
+    
   }
+  
+  return(list(Phi_st = Phi_st, Psi_st = Psi_st, coeff_st = coeff_st))
   
 }
