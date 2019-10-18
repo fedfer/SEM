@@ -19,7 +19,7 @@ gibbs <- function(X, Y, nrun, burn, thin = 1, alpha_prior = NULL, theta_inf = 0.
   bs <- 0.3 # speicifcation of these?
   
   k <- 2
-  m <- 2
+  m <- 3
   a <- 1/2
   # Factorization hyperparameters
   # TODO: clean up factorization hyperparameters
