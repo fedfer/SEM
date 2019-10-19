@@ -49,8 +49,9 @@ gibbs <- function(X, Y, nrun, burn, thin = 1, alpha_prior = NULL, theta_inf = 0.
   sig_xis <- rgamma(m, as, bs)
   Sigma_xi <- diag(1/sig_xis)
   
-  sig_etas <- rgamma(k, as, bs) # no prior on this -  how do we choose?
-  Sigma_eta <- diag(1/sig_etas)
+  #sig_etas <- rgamma(k, as, bs) # no prior on this -  how do we choose?
+  #Sigma_eta <- diag(1/sig_etas)
+  Sigma_eta <- diag(rep(x = 1, times = k))
   
   Ga <- matrix(rnorm(m*k), m, k)
   Ga.T <- t(Ga)
@@ -204,12 +205,16 @@ gibbs <- function(X, Y, nrun, burn, thin = 1, alpha_prior = NULL, theta_inf = 0.
     # --- Update eta --- #
     # Without interaction terms, conjugate
     for (i in 1:n) {
-      print(paste("iteration", i))
+      #print(paste("iteration", i))
+      #print(paste("dimension of Ga.T", dim(Ga.T)))
+      #print(paste("dimension of inerse sigma", dim(chol2inv(chol(Sigma_xi)))))
+      #print(eta[i, ])
       # udpate eta matrix by row
       covar <- solve( Ga.T %*%  chol2inv(chol(Sigma_xi)) %*% Ga + Lambda_x.T %*% chol2inv(chol(Psi)) %*% Lambda_x + Sigma_eta)
-      mean <- covar %*% ( Ga.T %*% chol2inv(chol(Sigma_xi)) %*% eta[i, ] + Lambda_x.T %*% chol2inv(chol(Psi)) %*% X[i, ] )
+      mean <- covar %*% ( Ga.T %*% chol2inv(chol(Sigma_xi)) %*% xi[i, ] + Lambda_x.T %*% chol2inv(chol(Psi)) %*% X[i, ] )
       eta[i, ] <- bayesSurv::rMVNorm(n = 1, mean = mean, Sigma = covar)
     }
+    eta.T <- t(eta)
     
     
     # --- Update Lambda_y --- #
@@ -226,7 +231,7 @@ gibbs <- function(X, Y, nrun, burn, thin = 1, alpha_prior = NULL, theta_inf = 0.
                                      phis[j] * xi.T %*% Y[,j])))
     }
     
-    Lambda.T = t(Lambda)
+    Lambda_y.T = t(Lambda_y)
     
     
     # --- Update rhojh --- #
@@ -256,9 +261,13 @@ gibbs <- function(X, Y, nrun, burn, thin = 1, alpha_prior = NULL, theta_inf = 0.
     # TODO: specify omega_dir and other stuffs, check if things specified in the beginning of gibbs_CUSP is specified in the function signatures
     
     # --- Update Lambda_x --- #
-    Lamdba_x <- CUSP_update_Lambda(Lambda = Lambda_x, X , eta, eta.T, k, p, theta, ps,
+    Lambda_x <- CUSP_update_Lambda(Lambda = Lambda_x, X , eta, eta.T, k, p, theta, ps,
                                    omega_dir = C_dir, b_theta, a_theta, theta_inf, z_ind, P_z,
                                    v, alpha_prior)
+    Lambda_x.T <- t(Lambda_x)
+    # print(Lambda_x)
+    # print(Lambda_x.T)
+    
     
     # --- Update z_ind --- #
     z_ind <- CUSP_update_z_ind(Lambda = Lambda_x, X , eta, eta.T, k, p, theta, ps,
@@ -286,6 +295,13 @@ gibbs <- function(X, Y, nrun, burn, thin = 1, alpha_prior = NULL, theta_inf = 0.
     V_n <- solve(Lambda_x.T %*% solve(Psi) %*% Lambda_x + solve(Sigma_eta))
     A_n <- V_n %*% Lambda_x.T %*% solve(Psi)
     coeff_st[count, , ] <- Lambda_y %*% Ga %*% A_n
+    # print("stored posterior samples")
+    # print(Lambda_x)
+    # print(Lambda_y)
+    # print(A_n)
+    # print(V_n)
+    # print(Lambda_x.T)
+    # print(solve(Psi))
     count <- count + 1
     
   }
