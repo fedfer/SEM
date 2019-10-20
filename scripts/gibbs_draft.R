@@ -3,6 +3,8 @@
 #            nrun: number of iterations of Gibbs sampler
 #
 
+#IMPORTANT: contains bugs fixed in v2 but not here. Contains metropolis hasting step for eta not in v2
+
 set.seed(42) # set random state
 
 # Libraries---------------------------------------------------------------
@@ -144,6 +146,53 @@ for (i in 1:n) {
   mean <- covar %*% ( Ga.T %*% chol2inv(chol(Sigma_xi)) %*% eta[i, ] + Lambda_x.T %*% chol2inv(chol(Psi)) %*% X[i, ] )
   eta[i, ] <- bayesSurv::rMVNorm(n = 1, mean = mean, Sigma = covar)
 }
+# Full conditional of eta with interaction terms-----------------------------------------------------------------------------
+
+acp = numeric(n) # PUT THIS WHEN INITIALIZING THINGS FOR GIBBS SAMPLER
+
+# Create Omegas
+
+
+create_vec_Omega_eta_i <- function(eta_i, Omegas){
+  # returns a m times 1 vector
+}
+
+# Update eta matrix by row
+for (h in 1:n) {
+  # Propose eta_star
+  eta_star <- bayesSurv::rMVNorm(n = 1, mean = 0, Sigma = 1) # Propose from a dumb proposal for now
+  eta_star.T <- t(eta_star)     # avoid repeated transpose calls
+  eta.T <- t(eta[h,]) # abuse notation, corrected after this metropolis update
+  
+  # Compute log of ratio
+  
+  xi.T <- t(xi[h, ]) # abuse of notation, corrected after this metropolis update
+  X.T <- t(X[h, ])
+  
+  vec_Omega_eta_star <- create_vec_Omega_eta_i(eta_i = eta_star, Omegas = Omegas)
+  vec_Omega_eta_star.T <- t(vec_Omega_eta_star)
+  vec_Omega_eta <- create_vec_Omega_eta_i(eta_i = eta[h, ], Omegas = Omegas)
+  vec_Omega_eta.T <- t(vec_Omega_eta)
+  logr <- (xi.T - eta_star.T %*% Ga.T - vec_Omega_eta_star.T) %*% solve(Sigma_xi) %*% (xi - Ga %*% eta_star - vec_Omega_eta_star) +
+    (X.T - eta_star.T %*% Lambda_x.T) %*% solve(Psi) %*% (X[h, ] - Lambda_x %*% eta_star) + 
+    eta_star.T %*% eta_star -
+    (xi.T - eta.T %*% Ga.T - vec_Omega_eta.T) %*% solve(Sigma_xi) %*% (xi - Ga %*% eta[h, ] - vec_Omega_eta) -
+    (X.T - eta.T %*% Lambda_x.T) %*% solve(Psi) %*% (X[h, ] - Lambda_x %*% eta[h, ]) -
+    eta.T %*% eta[h, ]
+  logr <- logr *(-0.5)
+  
+  logu = log(runif(1))
+  
+  if (logr > logu){
+    eta[h,] = eta_star
+    acp[h] = acp[h] + 1
+  }
+  
+}
+
+eta.T <- t(eta)
+xi.T <- t(xi)
+X.T <- t(X)
 
 
 # --- Update Lambda_y --- #

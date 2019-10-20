@@ -48,11 +48,21 @@ for (i in 1:n) {
   X[i, ] <- bayesSurv::rMVNorm(n = 1, mean = true_Lambda_x %*% true_eta[i, ], true_Psi)
 }
 
-gibbs_test <- gibbs(X = X, Y = Y, nrun = 1, burn = 0, thin = 1, alpha_prior = NULL, theta_inf = 0.05)
+
 
 true_V_n <- solve(true_Lambda_x.T %*% solve(true_Psi) %*% true_Lambda_x + solve(true_Sigma_eta))
 true_A_n <- true_V_n %*% true_Lambda_x.T %*% solve(true_Psi)
 true_coeff <- true_Lambda_y %*% true_Ga %*% true_A_n
 
 
+# -------------------------------------------------------------------------------------------------------------
+gibbs_test <- gibbs(X = X, Y = Y, nrun = 5000, burn = 0, thin = 1, alpha_prior = NULL, theta_inf = 0.05)
+
+# Traceplot
+plot(x = 1:5000, y = gibbs_test[["Phi_st"]][,1,1], type = "l", lty = 1)
+mean(gibbs_test[["Phi_st"]][4000:5000,1,1])
+true_Phi[1,1]
+
+# Running averages plot
+plot(x = 1:5000, y = cumsum(gibbs_test[["Phi_st"]][,1,1])/1:5000, type = "l", lty = 1)
 
