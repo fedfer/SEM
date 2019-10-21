@@ -75,8 +75,8 @@ true_Phi[1,1]
 est_coeff = apply(gibbs_test$coeff_st,c(2,3),mean)
 plot(x = 1:n_samples, y = gibbs_test[["coeff_st"]][,3,8], type = "l", lty = 1)
 abline(h = true_coeff[3,8], col = "red")
-est_coeff
-true_coeff
+
+# Compute error 
 err = est_coeff-true_coeff
 err %>% abs() %>% mean()
 
