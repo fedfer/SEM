@@ -1,3 +1,4 @@
+library(tidyverse)
 source("scripts/gibbs_draft_v2.R")
 
 set.seed(42) # Set random state
@@ -5,19 +6,21 @@ set.seed(42) # Set random state
 # p = 4, q = 5, k = 2, m = 3, n <- 6
 
 # Generate simulated data--------------------------------------------------------
-p <- 4
-q <- 5
-k <- 2
+p <- 10
+q <- 4
+k <- 4
 m <- 3
-n <- 6
+n <- 1000
 
 as <- 1
 bs <- 0.3
 
-true_phis <- rgamma(q,as,bs) 
+#true_phis <- rgamma(q,as,bs) 
+true_phis <- rep(10,q) 
 true_Phi <- diag(1/true_phis)
 
-true_ps <- rgamma(p,as,bs) 
+#true_ps <- rgamma(p,as,bs) 
+true_ps <- rep(10,p) 
 true_Psi <- diag(1/true_ps)
 
 true_Lambda_y <- matrix(rnorm(q*m), q, m)
@@ -56,13 +59,27 @@ true_coeff <- true_Lambda_y %*% true_Ga %*% true_A_n
 
 
 # -------------------------------------------------------------------------------------------------------------
-gibbs_test <- gibbs(X = X, Y = Y, nrun = 5000, burn = 0, thin = 1, alpha_prior = NULL, theta_inf = 0.05)
+nrun = 1000
+burn = 500
+n_samples = nrun - burn
+gibbs_test <- gibbs(X = X, Y = Y, nrun = nrun, burn = burn, thin = 1, 
+                    alpha_prior = NULL, theta_inf = 0.05,
+                    m = m, k = k)
 
 # Traceplot
-plot(x = 1:5000, y = gibbs_test[["Phi_st"]][,1,1], type = "l", lty = 1)
-mean(gibbs_test[["Phi_st"]][4000:5000,1,1])
+plot(x = 1:n_samples, y = gibbs_test[["Phi_st"]][,1,1], type = "l", lty = 1)
+mean(gibbs_test[["Phi_st"]][,1,1])
 true_Phi[1,1]
 
+# Traceplot
+est_coeff = apply(gibbs_test$coeff_st,c(2,3),mean)
+plot(x = 1:n_samples, y = gibbs_test[["coeff_st"]][,3,8], type = "l", lty = 1)
+abline(h = true_coeff[3,8], col = "red")
+est_coeff
+true_coeff
+err = est_coeff-true_coeff
+err %>% abs() %>% mean()
+
 # Running averages plot
-plot(x = 1:5000, y = cumsum(gibbs_test[["Phi_st"]][,1,1])/1:5000, type = "l", lty = 1)
+plot(x = 1:n_samples, y = cumsum(gibbs_test[["Phi_st"]][,1,1])/1:n_samples, type = "l", lty = 1)
 

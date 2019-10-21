@@ -7,20 +7,20 @@ library(statmod)
 library(GIGrvg)
 library(mvtnorm)
 
-gibbs <- function(X, Y, nrun, burn, thin = 1, alpha_prior = NULL, theta_inf = 0.05){
+gibbs <- function(X, Y, nrun, burn, thin = 1, alpha_prior = NULL, theta_inf = 0.05,
+                  k = NULL, m = NULL, a = 1/2){
   
   n <- nrow(X)
   p <- ncol(X)
   q <- ncol(Y) # collect data attributes
   
   if(is.null(alpha_prior)) alpha_prior =  p*floor(log(p)*3)/10
+  if(is.null(k)) k = floor(p/2)
+  if(is.null(m)) m = floor(q/2)
   
   as <- 1 # specification of these?
   bs <- 0.3 # speicifcation of these?
   
-  k <- 2
-  m <- 3
-  a <- 1/2
   # Factorization hyperparameters
   # TODO: clean up factorization hyperparameters
   a_theta <- 2
@@ -150,14 +150,14 @@ gibbs <- function(X, Y, nrun, burn, thin = 1, alpha_prior = NULL, theta_inf = 0.
   
   
   # Sample storage memory allocation
-  Phi_st <- array(0, c(nrun, q, q))
-  Psi_st <- array(0, c(nrun, p, p))
-  coeff_st <- array(0, c(nrun, q, p)) # Maybe a better name for this
+  Phi_st <- array(0, c(nrun - burn, q, q))
+  Psi_st <- array(0, c(nrun - burn, p, p))
+  coeff_st <- array(0, c(nrun - burn, q, p)) # Maybe a better name for this
   count <- 1
   
   
   
-  for (i in 1:nrun) {
+  for (s in 1:nrun) {
     # --- Update Psi --- #
     Xtil <- X - eta%*%Lambda_x.T
     ps <- rgamma(n = p, shape = as + 0.5*n, rate = 1) 
@@ -180,9 +180,9 @@ gibbs <- function(X, Y, nrun, burn, thin = 1, alpha_prior = NULL, theta_inf = 0.
     
     # --- Update xi --- #
     # Advantage of this specific function of sampling from MVN?
+    covar <- solve(Lambda_y.T %*% solve(Phi) %*% Lambda_y + solve(Sigma_xi))
     for (i in 1:n) {
       # update xi matrix by row, without interaction terms
-      covar <- solve(Lambda_y.T %*% solve(Phi) %*% Lambda_y + solve(Sigma_xi))
       mean <- covar %*% ( Lambda_y.T %*% solve(Phi) %*% Y[i, ] + solve(Sigma_xi) %*% Ga %*% eta[i, ] )
       xi[i, ] <- bayesSurv::rMVNorm(n = 1, mean = mean, Sigma = covar)
     }
@@ -204,13 +204,13 @@ gibbs <- function(X, Y, nrun, burn, thin = 1, alpha_prior = NULL, theta_inf = 0.
     
     # --- Update eta --- #
     # Without interaction terms, conjugate
+    covar <- solve( Ga.T %*%  chol2inv(chol(Sigma_xi)) %*% Ga + Lambda_x.T %*% chol2inv(chol(Psi)) %*% Lambda_x + Sigma_eta)
     for (i in 1:n) {
       #print(paste("iteration", i))
       #print(paste("dimension of Ga.T", dim(Ga.T)))
       #print(paste("dimension of inerse sigma", dim(chol2inv(chol(Sigma_xi)))))
       #print(eta[i, ])
       # udpate eta matrix by row
-      covar <- solve( Ga.T %*%  chol2inv(chol(Sigma_xi)) %*% Ga + Lambda_x.T %*% chol2inv(chol(Psi)) %*% Lambda_x + Sigma_eta)
       mean <- covar %*% ( Ga.T %*% chol2inv(chol(Sigma_xi)) %*% xi[i, ] + Lambda_x.T %*% chol2inv(chol(Psi)) %*% X[i, ] )
       eta[i, ] <- bayesSurv::rMVNorm(n = 1, mean = mean, Sigma = covar)
     }
@@ -289,20 +289,27 @@ gibbs <- function(X, Y, nrun, burn, thin = 1, alpha_prior = NULL, theta_inf = 0.
                                  omega_dir = C_dir, b_theta, a_theta, theta_inf, z_ind, P_z,
                                  v, alpha_prior)
     
-    # Store posterior samples
-    Phi_st[count, , ] <- Phi
-    Psi_st[count, , ] <- Psi
-    V_n <- solve(Lambda_x.T %*% solve(Psi) %*% Lambda_x + solve(Sigma_eta))
-    A_n <- V_n %*% Lambda_x.T %*% solve(Psi)
-    coeff_st[count, , ] <- Lambda_y %*% Ga %*% A_n
-    # print("stored posterior samples")
-    # print(Lambda_x)
-    # print(Lambda_y)
-    # print(A_n)
-    # print(V_n)
-    # print(Lambda_x.T)
-    # print(solve(Psi))
-    count <- count + 1
+    if(s > burn){
+      # Store posterior samples
+      Phi_st[count, , ] <- Phi
+      Psi_st[count, , ] <- Psi
+      V_n <- solve(Lambda_x.T %*% solve(Psi) %*% Lambda_x + solve(Sigma_eta))
+      A_n <- V_n %*% Lambda_x.T %*% solve(Psi)
+      coeff_st[count, , ] <- Lambda_y %*% Ga %*% A_n
+      # print("stored posterior samples")
+      # print(Lambda_x)
+      # print(Lambda_y)
+      # print(A_n)
+      # print(V_n)
+      # print(Lambda_x.T)
+      # print(solve(Psi))
+      count <- count + 1
+    }
+    
+    if (s %% 200 == 0){
+      print(s)
+    }
+    
     
   }
   
