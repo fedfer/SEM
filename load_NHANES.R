@@ -51,7 +51,7 @@ data = tibble(names, strings) %>%
   mutate(files = map(strings, function(s) get_files(s, years)),
          data = map(files, get_data))
 
-# Demographics
+#### DEMOGRAPHICS ####
 # https://wwwn.cdc.gov/nchs/nhanes/Search/DataPage.aspx?Component=Demographics&CycleBeginYear=2015
 people = data %>%
   filter(names == "demographics") %>%
@@ -72,6 +72,8 @@ people = data %>%
 # For chemicals and effect modifiers
 #https://wwwn.cdc.gov/nchs/nhanes/Search/DataPage.aspx?Component=Laboratory&CycleBeginYear=2015
 
+
+#### CHEMICALS ####
 # Volatile Organic Compounds and Trihalomethanes/MTBE - Blood (VOCWB_I)
 voc_blood = data %>%
   filter(names == "voc_blood") %>%
@@ -549,7 +551,8 @@ diamines = data %>%
 # URX5NDA: 1,5-Diaminonaphthalene (5NDA) (ng/mL)
 # URXPPDA: p-Phenylenediamine (PPDA) (ng/mL)
 
-# Potential Outcomes
+
+#### OUTCOMES ####
 # Complete Blood Count with 5-Part Differential - Whole Blood (CBC_I)
 blood_count = data %>%
   filter(names == "blood_count") %>%
@@ -573,9 +576,15 @@ blood_count = data %>%
 # LBXMPSI: Mean platelet volume (fL)
 
 
-df = join_all(list(people,albumin_creatinine_nhanes,
-                   apolipoprotein,arsenic,bio,blood_count,chlamydia,
-                   chol,chromium_cobalt,copper_etc,cotinine,cotinine_urine,
+
+
+#### JOIN #### 
+
+df = join_all(list(people,albumin_creatinine_nhanes, #covariates
+                   apolipoprotein,bio,chol, 
+                   arsenic,chlamydia,
+                   blood_count,  #outcomes
+                   chromium_cobalt,copper_etc,cotinine,cotinine_urine, #chemicals
                    deet,diamines,ferritin,fluoride_plasma,fluoride_water,
                    folate,folate_serum,glycohemoglobin,iodine,mercury_blood,
                    mercury_urine,metals_blood,metals_urine,neonicotinoids,
@@ -583,9 +592,27 @@ df = join_all(list(people,albumin_creatinine_nhanes,
                    voc_blood,voc_urine), 
                by='SEQN', type='left')
 
+df_chem = join_all(list(chromium_cobalt,copper_etc,cotinine,cotinine_urine, 
+                   deet,diamines,ferritin,fluoride_plasma,fluoride_water,
+                   folate,folate_serum,glycohemoglobin,iodine,mercury_blood,
+                   mercury_urine,metals_blood,metals_urine,neonicotinoids,
+                   pfas,phthalate,spec_arsernic_urine,steroid,trichomonas,
+                   voc_blood,voc_urine), 
+              by='SEQN', type='left')
 
-# save data
-save(df, file = "~/SEM/nhanes_1516.RData")
+df_out = join_all(list(blood_count), 
+                   by='SEQN', type='left')
+
+df_cov = join_all(list(people,albumin_creatinine_nhanes,
+                       apolipoprotein,bio,chol, 
+                       arsenic,chlamydia), 
+                   by='SEQN', type='left')
+
+
+
+
+#### SAVE ####
+save(df, file = "~/SEM/data/nhanes_1516.RData")
 
 
 
