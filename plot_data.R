@@ -2,14 +2,19 @@
 library(tidyverse)
 library(plyr)
 library(reshape2)
+library(naniar)
+
 
 
 # matrix 0-1 for missing data
 load("~/SEM/data/nhanes_1516.RData")
 df_01 = df %>% is.na()
 df_01 %>% as.matrix() %>% image()
+#vis_miss(df_chem, warn_large_data = F)
+
 
 # matrix 0-1 for Limit of Detection
+#vis_miss(df_out, warn_large_data = F)
 load("~/SEM/data/nhanes_chem_1516.RData")
 df_chem_noSEQN = df_chem %>% dplyr::select(-SEQN)
 lod =  df_chem_noSEQN %>% apply(., 2, function(x) min(x, na.rm = T))
