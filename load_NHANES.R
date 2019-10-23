@@ -57,7 +57,7 @@ people = data %>%
   filter(names == "demographics") %>%
   dplyr::select(data) %>%
   unnest() %>%
-  select(SEQN,RIDAGEYR, RIAGENDR, RIDRETH1, DMDEDUC3, DMDEDUC2,
+  dplyr::select(SEQN,RIDAGEYR, RIAGENDR, RIDRETH1, DMDEDUC3, DMDEDUC2,
            DMDMARTL,INDFMPIR,RIDEXPRG)
 # RIDAGEYR: Age in years at screening
 # RIAGENDR: Gender
@@ -76,10 +76,10 @@ people = data %>%
 # Volatile Organic Compounds and Trihalomethanes/MTBE - Blood (VOCWB_I)
 voc_blood = data %>%
   filter(names == "voc_blood") %>%
-  dplyr::dplyr::select(data) %>%
+  dplyr::select(data) %>%
   unnest() %>%
   #filter(SEQN %in% chem_nhanes$SEQN) %>%
-  select(SEQN,LBX2DF,LBX4CE,LBXV06,LBXV07N,LBXV08N,
+  dplyr::select(SEQN,LBX2DF,LBX4CE,LBXV06,LBXV07N,LBXV08N,
          LBXV3B,LBXV4C,LBXVBF,LBXVBM,LBXVBZ,
          LBXVBZN,LBXVC6,LBXVCB,LBXVCF,LBXVCM,LBXVCT,
          LBXVDB,LBXVDE,LBXVDEE,LBXVDX,LBXVEA,LBXVEB,LBXVEC,
@@ -131,10 +131,10 @@ voc_blood = data %>%
 # Volatile Organic Compound (VOC) Metabolites - Urine (UVOC_I)
 voc_urine = data %>%
   filter(names == "voc_urine") %>%
-  dplyr::dplyr::select(data) %>%
+  dplyr::select(data) %>%
   unnest() %>%
   #filter(SEQN %in% chem_nhanes$SEQN) %>%
-  select(SEQN,URXAAM,URXAMC,URXATC,URXBMA,URXBPM,
+  dplyr::select(SEQN,URXAAM,URXAMC,URXATC,URXBMA,URXBPM,
          URXCEM,URXCYHA,URXCYM,URX1DC,
          URX2DC,URXDHB,URXDPM,URXGAM,
          URXHPM,URXHP2,URXIPM1,URXIPM3,URXMAD,
@@ -172,19 +172,19 @@ voc_urine = data %>%
 # Trichomonas - Urine (TRICH_I)
 trichomonas = data %>%
   filter(names == "trichomonas") %>%
-  dplyr::dplyr::select(data) %>%
+  dplyr::select(data) %>%
   unnest() %>%
   #filter(SEQN %in% chem_nhanes$SEQN) %>%
-  select(SEQN,URXUTRI) 
+  dplyr::select(SEQN,URXUTRI) 
 # URXUTRI: Trichomonas, Urine
 
 # Standard Biochemistry Profile (BIOPRO_I)
 bio = data %>%
   filter(names == "bio") %>%
-  dplyr::dplyr::select(data) %>%
+  dplyr::select(data) %>%
   unnest() %>%
   #filter(SEQN %in% chem_nhanes$SEQN) %>%
-  select(SEQN,LBXSATSI,LBXSAL,LBXSAPSI,LBXSASSI,
+  dplyr::select(SEQN,LBXSATSI,LBXSAL,LBXSAPSI,LBXSASSI,
          LBXSC3SI,LBXSBU,LBXSCLSI,LBXSCH,
          LBXSCK,LBXSCR,LBXSGTSI,LBXSGL,LBXSIR,
          LBXSPH,LBXSKSI,LBXSNASI,LBXSTB,LBXSCA,LBXSTP,
@@ -214,9 +214,9 @@ bio = data %>%
 # Speciated Arsenics - Urine (UAS_I)
 spec_arsernic_urine = data %>%
   filter(names == "spec_arsernic_urine") %>%
-  dplyr::dplyr::select(data) %>%
+  dplyr::select(data) %>%
   unnest() %>%
-  select(SEQN,URXUAS3,URXUAS5,URXUAB,URXUAC,
+  dplyr::select(SEQN,URXUAS3,URXUAS5,URXUAB,URXUAC,
          URXUDMA,URXUMMA)
 # URXUAS3: Urinary Arsenous Acid
 # URXUAS5: Urinary Arsenic acid
@@ -229,10 +229,10 @@ spec_arsernic_urine = data %>%
 # Sex Steroid Hormone - Serum (TST_I)
 steroid  = data %>%
   filter(names == "steroid") %>%
-  dplyr::dplyr::select(data) %>%
+  dplyr::select(data) %>%
   unnest() %>%
   #filter(SEQN %in% chem_nhanes$SEQN) %>%
-  select(SEQN,LBXTST,LBXEST,LBXSHBG)
+  dplyr::select(SEQN,LBXTST,LBXEST,LBXSHBG)
 # LBXTST: Testosterone, total (ng/dL)
 # LBXEST: Estradiol (pg/mL)
 # LBXSHBG: SHBG (nmol/L)
@@ -240,10 +240,10 @@ steroid  = data %>%
 # Phthalates and Plasticizers Metabolites - Urine (PHTHTE_I)
 phthalate  = data %>%
   filter(names == "phthalate") %>%
-  dplyr::dplyr::select(data) %>%
+  dplyr::select(data) %>%
   unnest() %>%
   #filter(SEQN %in% chem_nhanes$SEQN) %>%
-  select(SEQN,URXCNP,URXCOP,URXECP,URXHIBP,URXMBP,URXMC1,
+  dplyr::select(SEQN,URXCNP,URXCOP,URXECP,URXHIBP,URXMBP,URXMC1,
          URXMCOH,URXMEP,URXMHBP,URXMHH,URXMHNC,URXMHP,
          URXMIB,URXMNP,URXMOH,URXMZP)
 # URXCNP:	Mono(carboxyisononyl) phthalate (ng/mL)	
@@ -266,10 +266,10 @@ phthalate  = data %>%
 # Perfluoroalkyl and Polyfluoroalkyl (PFAS_I)
 pfas  = data %>%
   filter(names == "pfas") %>%
-  dplyr::dplyr::select(data) %>%
+  dplyr::select(data) %>%
   unnest() %>%
   #filter(SEQN %in% chem_nhanes$SEQN) %>%
-  select(SEQN,LBXPFDE,LBXPFHS,LBXMPAH,LBXPFNA,LBXPFUA,
+  dplyr::select(SEQN,LBXPFDE,LBXPFHS,LBXMPAH,LBXPFNA,LBXPFUA,
          LBXPFDO,LBXNFOA,LBXBFOA,LBXNFOS,LBXMFOS)
 # LBXPFDE: Perfluorodecanoic acid (ng/mL)
 # LBXPFHS: Perfluorohexane sulfonic acid (ng/mL)
@@ -285,10 +285,10 @@ pfas  = data %>%
 # Metals - Urine (UM_I)
 metals_urine  = data %>%
   filter(names == "metals_urine") %>%
-  dplyr::dplyr::select(data) %>%
+  dplyr::select(data) %>%
   unnest() %>%
   #filter(SEQN %in% chem_nhanes$SEQN) %>%
-  select(SEQN,URXUBA,URXUCD,URXUCO,URXUCS,URXUMO,
+  dplyr::select(SEQN,URXUBA,URXUCD,URXUCO,URXUCS,URXUMO,
          URXUMN,URXUPB,URXUSB,URXUSN,URXUSR,
          URXUTL,URXUTU,URXUUR)
 # URXUBA: Barium, urine (ug/L)
@@ -308,10 +308,10 @@ metals_urine  = data %>%
 # Mercury: Inorganic, Ethyl and Methyl – Blood (IHGEM_I)
 mercury_blood  = data %>%
   filter(names == "mercury_blood") %>%
-  dplyr::dplyr::select(data) %>%
+  dplyr::select(data) %>%
   unnest() %>%
   #filter(SEQN %in% chem_nhanes$SEQN) %>%
-  select(SEQN,LBXIHG,LBXBGE,LBXBGM)
+  dplyr::select(SEQN,LBXIHG,LBXBGE,LBXBGM)
 # LBXIHG: Mercury, inorganic (ug/L)
 # LBXBGE: Mercury, ethyl (ug/L)
 # LBXBGM: Mercury, methyl (ug/L)
@@ -320,19 +320,19 @@ mercury_blood  = data %>%
 # Mercury - Urine (UHG_I)
 mercury_urine  = data %>%
   filter(names == "mercury_urine") %>%
-  dplyr::dplyr::select(data) %>%
+  dplyr::select(data) %>%
   unnest() %>%
   #filter(SEQN %in% chem_nhanes$SEQN) %>%
-  select(SEQN,URXUHG)
+  dplyr::select(SEQN,URXUHG)
 # URXUHG: Urine Mercury (ng/mL)
 
 # Lead, Cadmium, Total Mercury, Selenium & Manganese - Blood (PBCD_I)
 metals_blood  = data %>%
   filter(names == "metals_blood") %>%
-  dplyr::dplyr::select(data) %>%
+  dplyr::select(data) %>%
   unnest() %>%
   #filter(SEQN %in% chem_nhanes$SEQN) %>%
-  select(SEQN,LBXBPB,LBXBCD,LBXTHG,LBXBSE,LBXBMN)
+  dplyr::select(SEQN,LBXBPB,LBXBCD,LBXTHG,LBXBSE,LBXBMN)
 # LBXBPB: Blood lead (ug/dL)
 # LBXBCD: Blood cadmium (ug/L)
 # LBXTHG: Blood mercury, total (ug/L)
@@ -342,19 +342,19 @@ metals_blood  = data %>%
 # Iodine - Urine (UIO_I)
 iodine  = data %>%
   filter(names == "iodine") %>%
-  dplyr::dplyr::select(data) %>%
+  dplyr::select(data) %>%
   unnest() %>%
   #filter(SEQN %in% chem_nhanes$SEQN) %>%
-  select(SEQN,URXUIO)
+  dplyr::select(SEQN,URXUIO)
 # URXUIO: Iodine, urine (ng/mL)
 
 # Neonicotinoids - Urine - Surplus (SSNEON_I)
 neonicotinoids  = data %>%
   filter(names == "neonicotinoids") %>%
-  dplyr::dplyr::select(data) %>%
+  dplyr::select(data) %>%
   unnest() %>%
   #filter(SEQN %in% chem_nhanes$SEQN) %>%
-  select(SEQN,SSIMID,SSACET,SSCLOT,
+  dplyr::select(SEQN,SSIMID,SSACET,SSCLOT,
          SSTHIA,SSOHIM,SSAND)
 # SSIMID: Imidacloprid (ug/L)
 # SSACET: Acetamiprid (ug/L)
@@ -366,19 +366,19 @@ neonicotinoids  = data %>%
 # Glycohemoglobin (GHB_I)
 glycohemoglobin  = data %>%
   filter(names == "glycohemoglobin") %>%
-  dplyr::dplyr::select(data) %>%
+  dplyr::select(data) %>%
   unnest() %>%
   #filter(SEQN %in% chem_nhanes$SEQN) %>%
-  select(SEQN,LBXGH)
+  dplyr::select(SEQN,LBXGH)
 # LBXGH: Glycohemoglobin (%)
 
 #Folate Forms - Total & Individual - Serum (FOLFMS_I)
 folate_serum  = data %>%
   filter(names == "folate_serum") %>%
-  dplyr::dplyr::select(data) %>%
+  dplyr::select(data) %>%
   unnest() %>%
   #filter(SEQN %in% chem_nhanes$SEQN) %>%
-  select(SEQN,LBDFOT,LBDSF1LC,LBDSF2LC,LBDSF3LC,
+  dplyr::select(SEQN,LBDFOT,LBDSF1LC,LBDSF2LC,LBDSF3LC,
          LBDSF4LC,LBDSF5LC,LBDSF6LC)
 # LBDFOT: Serum total folate (ng/mL)
 # LBDSF1LC: 5-Methyl-tetrahydrofolate cmt
@@ -391,56 +391,56 @@ folate_serum  = data %>%
 # Folate - RBC (FOLATE_I)
 folate  = data %>%
   filter(names == "folate") %>%
-  dplyr::dplyr::select(data) %>%
+  dplyr::select(data) %>%
   unnest() %>%
   #filter(SEQN %in% chem_nhanes$SEQN) %>%
-  select(SEQN,LBDRFO)
+  dplyr::select(SEQN,LBDRFO)
 # LBDRFO: RBC folate (ng/mL)
 
 # Fluoride - Water (FLDEW_I)
 fluoride_water  = data %>%
   filter(names == "fluoride_water") %>%
-  dplyr::dplyr::select(data) %>%
+  dplyr::select(data) %>%
   unnest() %>%
   #filter(SEQN %in% chem_nhanes$SEQN) %>%
-  select(SEQN,LBDWFL)
+  dplyr::select(SEQN,LBDWFL)
 # LBDWFL - Fluoride, water (mg/L) average 2 values
 
 # Fluoride - Plasma (FLDEP_I)
 fluoride_plasma  = data %>%
   filter(names == "fluoride_plasma") %>%
-  dplyr::dplyr::select(data) %>%
+  dplyr::select(data) %>%
   unnest() %>%
   #filter(SEQN %in% chem_nhanes$SEQN) %>%
-  select(SEQN,LBDPFL)
+  dplyr::select(SEQN,LBDPFL)
 # LBDPFL - Fluoride, plasma (umol/L) average 2
 
 # Ferritin (FERTIN_I)
 ferritin = data %>%
   filter(names == "ferritin") %>%
-  dplyr::dplyr::select(data) %>%
+  dplyr::select(data) %>%
   unnest() %>%
   #filter(SEQN %in% chem_nhanes$SEQN) %>%
-  select(SEQN,LBXFER)
+  dplyr::select(SEQN,LBXFER)
 # LBXFER - Ferritin (ng/mL)
 
 
 # DEET Metabolite - Urine (DEET_I)
 deet = data %>%
   filter(names == "deet") %>%
-  dplyr::dplyr::select(data) %>%
+  dplyr::select(data) %>%
   unnest() %>%
   #filter(SEQN %in% chem_nhanes$SEQN) %>%
-  select(SEQN,URXDEA)
+  dplyr::select(SEQN,URXDEA)
 # URXDEA: DEET acid (ng/mL)
 
 # Cotinine, Hydroxycotinine, & Other Nicotine Metabolites and Analogs - Urine (UCOT_I)
 cotinine_urine = data %>%
   filter(names == "cotinine_urine") %>%
-  dplyr::dplyr::select(data) %>%
+  dplyr::select(data) %>%
   unnest() %>%
   #filter(SEQN %in% chem_nhanes$SEQN) %>%
-  select(SEQN,URXCOTT,URXHCTT,URXANBT,URXANTT,
+  dplyr::select(SEQN,URXCOTT,URXHCTT,URXANBT,URXANTT,
          URXCOXT,URXHPBT,URXNICT,URXNNCT,
          URXNOXT,URDTNE2,URDTNE3,URDTNE6,URDTNE7)
 # URXCOTT: Total Cotinine, urine (ng/mL)
@@ -460,20 +460,20 @@ cotinine_urine = data %>%
 # Cotinine and Hydroxycotinine - Serum (COT_I)
 cotinine = data %>%
   filter(names == "cotinine") %>%
-  dplyr::dplyr::select(data) %>%
+  dplyr::select(data) %>%
   unnest() %>%
   #filter(SEQN %in% chem_nhanes$SEQN) %>%
-  select(SEQN,LBXCOT,LBXHCT)
+  dplyr::select(SEQN,LBXCOT,LBXHCT)
 # LBXCOT: Cotinine, Serum (ng/mL)
 # LBXHCT: Hydroxycotinine, Serum (ng/mL)
 
 # Copper, Selenium & Zinc - Serum (CUSEZN_I)
 copper_etc = data %>%
   filter(names == "copper_etc") %>%
-  dplyr::dplyr::select(data) %>%
+  dplyr::select(data) %>%
   unnest() %>%
   #filter(SEQN %in% chem_nhanes$SEQN) %>%
-  select(SEQN,LBXSCU,LBXSSE,LBXSZN)
+  dplyr::select(SEQN,LBXSCU,LBXSSE,LBXSZN)
 # LBXSCU: Serum Copper (ug/dL)
 # LBXSSE: Serum Selenium (ug/L)
 # LBXSZN: Serum Zinc (ug/dL)
@@ -481,10 +481,10 @@ copper_etc = data %>%
 # Chromium & Cobalt (CRCO_I)
 chromium_cobalt = data %>%
   filter(names == "chromium_cobalt") %>%
-  dplyr::dplyr::select(data) %>%
+  dplyr::select(data) %>%
   unnest() %>%
   #filter(SEQN %in% chem_nhanes$SEQN) %>%
-  select(SEQN,LBXBCR,LBXBCO)
+  dplyr::select(SEQN,LBXBCR,LBXBCO)
 # LBXBCR: Chromium (ug/L)
 # LBXBCO: Cobalt (ug/L)
 
@@ -492,57 +492,57 @@ chromium_cobalt = data %>%
 # Cholesterol - Total (TCHOL_I)
 chol = data %>%
   filter(names == "cholesterol") %>%
-  dplyr::dplyr::select(data) %>%
+  dplyr::select(data) %>%
   unnest() %>%
   #filter(SEQN %in% chem_nhanes$SEQN) %>%
-  select(SEQN,LBXTC)
+  dplyr::select(SEQN,LBXTC)
 # LBXTC: Total Cholesterol (mg/dL)
 
 # Arsenic - Total - Urine (UTAS_I)
 arsenic = data %>%
   filter(names == "arsernic_urine") %>%
-  dplyr::dplyr::select(data) %>%
+  dplyr::select(data) %>%
   unnest() %>%
   #filter(SEQN %in% chem_nhanes$SEQN) %>%
-  select(SEQN,URXUAS)
+  dplyr::select(SEQN,URXUAS)
 # URXUAS: Urinary arsenic, total (ug/L)
 
 #Chlamydia - Urine (CHLMDA_I)
 chlamydia = data %>%
   filter(names == "chlamydia") %>%
-  dplyr::dplyr::select(data) %>%
+  dplyr::select(data) %>%
   unnest() %>%
   #filter(SEQN %in% chem_nhanes$SEQN) %>%
-  select(SEQN,URXUCL)
+  dplyr::select(SEQN,URXUCL)
 # URXUCL - Chlamydia, Urine
 
 # Albumin & Creatinine - Urine
 albumin_creatinine_nhanes = data %>%
   filter(names == "albumin_creatinine_urine") %>%
-  dplyr::dplyr::select(data) %>%
+  dplyr::select(data) %>%
   unnest() %>%
   #filter(SEQN %in% chem_nhanes$SEQN) %>%
-  select(SEQN,URXUMA,URXUCR)
+  dplyr::select(SEQN,URXUMA,URXUCR)
 # URXUMA: Albumin, urine (mg/L)
 # URXUCR: Creatinine, urine (mg/dL)
 
 #Apolipoprotein
 apolipoprotein = data %>%
   filter(names == "apolipoprotein") %>%
-  dplyr::dplyr::select(data) %>%
+  dplyr::select(data) %>%
   unnest() %>%
   #filter(SEQN %in% chem_nhanes$SEQN) %>%
-  select(SEQN,LBXAPB)
+  dplyr::select(SEQN,LBXAPB)
 # LBXAPB: Apolipoprotein (B) (mg/dL)
 
 
 # Aromatic Diamines - Urine (UADM_I)
 diamines = data %>%
   filter(names == "diamines") %>%
-  dplyr::dplyr::select(data) %>%
+  dplyr::select(data) %>%
   unnest() %>%
   #filter(SEQN %in% chem_nhanes$SEQN) %>%
-  select(SEQN,URX4TDA,URX6TDA,URX4MDA,URX5NDA,
+  dplyr::select(SEQN,URX4TDA,URX6TDA,URX4MDA,URX5NDA,
          URXPPDA)
 # URX4TDA: 2,4-Diaminotoluene (4TDA) (ng/mL)
 # URX6TDA: 2,6-Diaminotoluene (6TDA) (ng/mL)
@@ -558,7 +558,7 @@ blood_count = data %>%
   dplyr::select(data) %>%
   unnest() %>%
   #filter(SEQN %in% chem_nhanes$SEQN) %>%
-  select(SEQN,LBXWBCSI,LBXLYPCT,LBXMOPCT,LBXNEPCT,
+  dplyr::select(SEQN,LBXWBCSI,LBXLYPCT,LBXMOPCT,LBXNEPCT,
          LBXEOPCT,LBXBAPCT,LBXRBCSI,LBXHGB,
          LBXHCT,LBXMCVSI,LBXRDW,LBXMPSI)
 # LBXWBCSI: White blood cell count (1000 cells/uL)
@@ -580,7 +580,7 @@ blood_pressure = data %>%
   dplyr::select(data) %>%
   unnest() %>%
   #filter(SEQN %in% chem_nhanes$SEQN) %>%
-  select(SEQN,BPXSY1,BPXDI1,BPXSY2,BPXDI2,
+  dplyr::select(SEQN,BPXSY1,BPXDI1,BPXSY2,BPXDI2,
          BPXSY3,BPXDI3,BPXSY4,BPXDI4)
 # BPXSY1: Systolic: Blood pres (1st rdg) mm Hg
 # BPXDI1: Diastolic: Blood pres (1st rdg) mm Hg
@@ -596,7 +596,7 @@ body_measures = data %>%
   dplyr::select(data) %>%
   unnest() %>%
   #filter(SEQN %in% chem_nhanes$SEQN) %>%
-  select(SEQN,BMXWT,BMXRECUM,BMXHEAD,
+  dplyr::select(SEQN,BMXWT,BMXRECUM,BMXHEAD,
          BMXHT,BMXBMI,BMXLEG,BMXARML,
          BMXARMC,BMXWAIST,BMDAVSAD)
 # BMXWT: Weight (kg)
