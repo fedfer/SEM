@@ -1,5 +1,4 @@
-# function to perform factorized regression with interactions
-# See Federico's paper (2019?)
+
 # CUSP
 
 # ARGUMENTS: y: vector of responses;
