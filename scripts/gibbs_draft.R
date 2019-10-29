@@ -150,17 +150,24 @@ for (i in 1:n) {
 
 acp = numeric(n) # PUT THIS WHEN INITIALIZING THINGS FOR GIBBS SAMPLER
 
-# Create Omegas
+# Initialize Omegas
+Omegas <- array(data = 0, c(m, k, k))
 
 
 create_vec_Omega_eta_i <- function(eta_i, Omegas){
   # returns a m times 1 vector
+  eta_i.T <- t(eta_i)
+  Omega_eta_i <- vector(mode = "numeric", length = dim(Omegas)[1])
+  for (j in 1:dim(Omegas)[1]) {
+    Omega_eta_i[j] <- eta_i.T %*% Omegas[j, , ] %*% eta_i
+  }
+  return(Omega_eta_i)
 }
 
-# Update eta matrix by row
+# Update eta matrix by row using metropolis hastings
 for (h in 1:n) {
   # Propose eta_star
-  eta_star <- bayesSurv::rMVNorm(n = 1, mean = 0, Sigma = 1) # Propose from a dumb proposal for now
+  eta_star <- bayesSurv::rMVNorm(n = 1, mean = rep(x = 0, times = k), Sigma = diag(rep(x = 1, times = k))) # Propose from a dumb proposal for now
   eta_star.T <- t(eta_star)     # avoid repeated transpose calls
   eta.T <- t(eta[h,]) # abuse notation, corrected after this metropolis update
   
@@ -173,10 +180,10 @@ for (h in 1:n) {
   vec_Omega_eta_star.T <- t(vec_Omega_eta_star)
   vec_Omega_eta <- create_vec_Omega_eta_i(eta_i = eta[h, ], Omegas = Omegas)
   vec_Omega_eta.T <- t(vec_Omega_eta)
-  logr <- (xi.T - eta_star.T %*% Ga.T - vec_Omega_eta_star.T) %*% solve(Sigma_xi) %*% (xi - Ga %*% eta_star - vec_Omega_eta_star) +
+  logr <- (xi.T - eta_star.T %*% Ga.T - vec_Omega_eta_star.T) %*% solve(Sigma_xi) %*% (xi[h, ] - Ga %*% eta_star - vec_Omega_eta_star) +
     (X.T - eta_star.T %*% Lambda_x.T) %*% solve(Psi) %*% (X[h, ] - Lambda_x %*% eta_star) + 
     eta_star.T %*% eta_star -
-    (xi.T - eta.T %*% Ga.T - vec_Omega_eta.T) %*% solve(Sigma_xi) %*% (xi - Ga %*% eta[h, ] - vec_Omega_eta) -
+    (xi.T - eta.T %*% Ga.T - vec_Omega_eta.T) %*% solve(Sigma_xi) %*% (xi[h, ] - Ga %*% eta[h, ] - vec_Omega_eta) -
     (X.T - eta.T %*% Lambda_x.T) %*% solve(Psi) %*% (X[h, ] - Lambda_x %*% eta[h, ]) -
     eta.T %*% eta[h, ]
   logr <- logr *(-0.5)
@@ -392,5 +399,17 @@ CUSP_update_theta_h <- function(Lambda, X, eta, eta.T, k, p, theta, ps,
 #   
 # }
 
+
+### --- Update Omegas --- ###
+MM <- model.matrix(~ .^2 - 1,as.data.frame(eta)) # factorized regression, so that we can make use of the interaction terms
+eta_inter <- cbind(eta^2, MM[, (k + 1):ncol(MM)]) # this is the eta star in paper
+eta_inter.T <- t(eta_inter) # avoid repeated transpose calls
+# Update each Omega_j one by one
+for (j in 1:m) {
+  covar <- solve( eta_inter.T %*% eta_inter / Sigma_xi[j, j] + diag(rep(1, ncol(eta_inter))) )
+  mean <- covar %*% eta_inter.T %*% (xi[, j] - eta %*% Ga[j, ]) / Sigma_xi[j, j]
+  omega_j_star <- bayesSurv::rMVNorm(n = 1, mean = mean, Sigma = covar)
+  
+}
 
 
