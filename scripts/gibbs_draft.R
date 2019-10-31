@@ -409,7 +409,13 @@ for (j in 1:m) {
   covar <- solve( eta_inter.T %*% eta_inter / Sigma_xi[j, j] + diag(rep(1, ncol(eta_inter))) )
   mean <- covar %*% eta_inter.T %*% (xi[, j] - eta %*% Ga[j, ]) / Sigma_xi[j, j]
   omega_j_star <- bayesSurv::rMVNorm(n = 1, mean = mean, Sigma = covar)
-  
+  Omega_j_diag <- omega_j_star[1:k]
+  omega_j_lower_triag <- omega_j_star[(k + 1):length(omega_j_star)]
+  Omega_j <- Omegas[j, , ]
+  Omega_j[lower.tri(Omega_j)] <- omega_j_lower_triag/2
+  Omega_j[upper.tri(Omega_j)] <- 0
+  Omega_j <- Omega_j + t(Omega_j)
+  diag(Omega_j) <- Omega_j_diag
 }
 
 
