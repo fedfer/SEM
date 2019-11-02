@@ -1,22 +1,21 @@
 
 
-    # --- Update Sigma_xi ---#
+    # --- Update Sigma_xi ---# Added to the interactions file
     # First, without interaction terms
     xi_til <- xi - eta %*% Ga.T
     sig_xis <- rgamma(n = m, shape = as + 0.5*n, rate = 1)
     sig_xis <- (1 / ( bs + 0.5*apply(X = xi_til^2, MARGIN = 2, FUN = sum) ) ) * sig_xis
     Sigma_xi <- diag(1/sig_xis)
-    # With interaction terms: to be completed
-    interactions <- apply(eta, c(1), function(eta_i){
-      apply(Omegas, c(1), function(Omega){eta_i %*% Omega %*% eta_i})
-    })
-    xi_til <- xi - eta %*% Ga.T
+    # With interaction terms: added to the interactions file
+    interactions <- t(apply(eta, c(1), function(eta_i){
+      apply(Omegas, c(1), function(Omega){t(eta_i) %*% Omega %*% eta_i})
+    }))
+    xi_til <- xi - eta %*% Ga.T - interactions
     sig_xis <- rgamma(n = m, shape = as + 0.5*n, rate = 1)
     sig_xis <- (1 / ( bs + 0.5*apply(X = xi_til^2, MARGIN = 2, FUN = sum) ) ) * sig_xis
     Sigma_xi <- diag(1/sig_xis)
     
     # --- Update xi --- #
-    # Advantage of this specific function of sampling from MVN?
     covar <- solve(Lambda_y.T %*% solve(Phi) %*% Lambda_y + solve(Sigma_xi))
     for (i in 1:n) {
       # update xi matrix by row, without interaction terms
@@ -24,7 +23,16 @@
       xi[i, ] <- bayesSurv::rMVNorm(n = 1, mean = mean, Sigma = covar)
     }
     xi.T <- t(xi)
-    # With interaction terms: to be completed
+    # With interaction terms: added to interactions file
+    covar <- solve(Lambda_y.T %*% solve(Phi) %*% Lambda_y + solve(Sigma_xi))
+    for (i in 1:n) {
+      # update xi matrix by row, without interaction terms
+      mean <- covar %*% ( Lambda_y.T %*% solve(Phi) %*% Y[i, ] + solve(Sigma_xi) %*% (Ga %*% eta[i, ] + apply(Omegas, c(1), etai_Omega_etai, etai = eta[i, ]) ) )
+      xi[i, ] <- bayesSurv::rMVNorm(n = 1, mean = mean, Sigma = covar)
+    }
+    xi.T <- t(xi)
+    
+    
     
     
     # --- Update Gamma --- #
@@ -36,7 +44,14 @@
       Ga[j, ] <- bayesSurv::rMVNorm(n = 1, mean = mean, Sigma = covar) 
     }
     Ga.T <- t(Ga) # update transpose of Gamma
-    # With interaction terms: to be completed
+    # With interaction terms: added to interactions file
+    for (j in 1:m) {
+      # update Gamma by row
+      covar <- solve(diag(k) + (1/Sigma_xi[j, j]) * eta.T %*% eta)
+      mean <- covar %*% ( (1/Sigma_xi[j, j]) * (eta.T %*%  xi[ , j] - apply(eta, c(1), function(x){t(x) %*% Omegas[j,,] %*% x}) ) )
+      Ga[j, ] <- bayesSurv::rMVNorm(n = 1, mean = mean, Sigma = covar) 
+    }
+    Ga.T <- t(Ga) # update transpose of Gamma
     
     
     # --- Update eta --- #
@@ -52,9 +67,10 @@
       eta[i, ] <- bayesSurv::rMVNorm(n = 1, mean = mean, Sigma = covar)
     }
     eta.T <- t(eta)
+    # With interaction terms, see gibbs_draft.R... added to interactions_v1
     
     
-    # --- Update Lambda_y --- #
+    # --- Update Lambda_y using DL --- #: added to interactions_v1
     Plam = rhojh*(zetajh^2)*matrix(rep(tau^2,m),q,m,byrow=F)
     xi2 <- xi.T %*% xi
     zlams = rnorm(m*q)       # generate normal draws all at once
@@ -71,19 +87,19 @@
     Lambda_y.T = t(Lambda_y)
     
     
-    # --- Update rhojh --- #
+    # --- Update rhojh --- #: added to interactions_v1
     mujh = zetajh*matrix(rep(tau,m),q,m,byrow = F)/abs(Lambda_y)
     rhojh <- matrix(statmod::rinvgauss(m*q, mujh),q,m,byrow = T)
     
     
-    # --- Update tau --- #
+    # --- Update tau --- #: added to interactions_v1
     for(j in 1:q){
       tau[j] = GIGrvg::rgig(n=1,lambda = 1-m, psi = 1, 
                             chi = 2*sum(abs(Lambda_y[j,])/zetajh[j,]))
     }
     
     
-    # --- Update zetajh --- #
+    # --- Update zetajh --- #: added to interactions_v1
     Tjh <- numeric(m)
     for(j in 1:q){
       for(h in 1:m){
@@ -93,7 +109,7 @@
       zetajh[j,] = Tjh/sum(Tjh)
     }
     
-    # --- CUSP update for Lambda_x --- #
+    # --- CUSP update for Lambda_x --- #: added to interactions_v1
     
     # TODO: specify omega_dir and other stuffs, check if things specified in the beginning of gibbs_CUSP is specified in the function signatures
     
@@ -127,7 +143,7 @@
                                  v, alpha_prior)
     
     if(s > burn){
-      # Store posterior samples
+      # Store posterior samples: added to interactions_v1
       Phi_st[count, , ] <- Phi
       Psi_st[count, , ] <- Psi
       V_n <- solve(Lambda_x.T %*% solve(Psi) %*% Lambda_x + solve(Sigma_eta))

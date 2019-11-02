@@ -148,21 +148,21 @@ for (i in 1:n) {
 }
 # Full conditional of eta with interaction terms-----------------------------------------------------------------------------
 
-acp = numeric(n) # PUT THIS WHEN INITIALIZING THINGS FOR GIBBS SAMPLER
+acp = numeric(n) # PUT THIS WHEN INITIALIZING THINGS FOR GIBBS SAMPLER... added to intearctions file
 
-# Initialize Omegas
+# Initialize Omegas... added to interactions file
 Omegas <- array(data = 0, c(m, k, k))
 
 
-create_vec_Omega_eta_i <- function(eta_i, Omegas){
-  # returns a m times 1 vector
-  eta_i.T <- t(eta_i)
-  Omega_eta_i <- vector(mode = "numeric", length = dim(Omegas)[1])
-  for (j in 1:dim(Omegas)[1]) {
-    Omega_eta_i[j] <- eta_i.T %*% Omegas[j, , ] %*% eta_i
-  }
-  return(Omega_eta_i)
-}
+# create_vec_Omega_eta_i <- function(eta_i, Omegas){ # no need for this function... using apply would be easier
+#   # returns a m times 1 vector
+#   eta_i.T <- t(eta_i)
+#   Omega_eta_i <- vector(mode = "numeric", length = dim(Omegas)[1])
+#   for (j in 1:dim(Omegas)[1]) {
+#     Omega_eta_i[j] <- eta_i.T %*% Omegas[j, , ] %*% eta_i
+#   }
+#   return(Omega_eta_i)
+# }
 
 # Update eta matrix by row using metropolis hastings
 for (h in 1:n) {
@@ -176,9 +176,9 @@ for (h in 1:n) {
   xi.T <- t(xi[h, ]) # abuse of notation, corrected after this metropolis update
   X.T <- t(X[h, ])
   
-  vec_Omega_eta_star <- create_vec_Omega_eta_i(eta_i = eta_star, Omegas = Omegas)
+  vec_Omega_eta_star <- apply(Omegas, c(1), function(Omega, y){t(y) %*% Omega %*% y}, y = eta_star)
   vec_Omega_eta_star.T <- t(vec_Omega_eta_star)
-  vec_Omega_eta <- create_vec_Omega_eta_i(eta_i = eta[h, ], Omegas = Omegas)
+  vec_Omega_eta <- apply(Omegas, c(1), function(Omega, y){t(y) %*% Omega %*% y}, y = eta[h, ])
   vec_Omega_eta.T <- t(vec_Omega_eta)
   logr <- (xi.T - eta_star.T %*% Ga.T - vec_Omega_eta_star.T) %*% solve(Sigma_xi) %*% (xi[h, ] - Ga %*% eta_star - vec_Omega_eta_star) +
     (X.T - eta_star.T %*% Lambda_x.T) %*% solve(Psi) %*% (X[h, ] - Lambda_x %*% eta_star) + 
