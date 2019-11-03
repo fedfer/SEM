@@ -74,7 +74,7 @@ gibbs <- function(X, Y, nrun, burn, thin = 1, alpha_prior = NULL, theta_inf = 0.
   
   Omegas <- array(data = 0, c(m, k, k)) # For interaction terms
   
-  
+  #print(paste("nrun is", nrun))
   Phi_st <- array(0, c(nrun - burn, q, q))          # Sample storage memory allocation
   Psi_st <- array(0, c(nrun - burn, p, p))
   coeff_st <- array(0, c(nrun - burn, q, p)) # Maybe a better name for this
@@ -89,6 +89,8 @@ gibbs <- function(X, Y, nrun, burn, thin = 1, alpha_prior = NULL, theta_inf = 0.
   
   
   for (s in 1:nrun) {
+    
+    print(paste("iteration", s))
     
     # --- Update Psi --- #
     # With or without interaction terms, this stays the same
@@ -126,7 +128,7 @@ gibbs <- function(X, Y, nrun, burn, thin = 1, alpha_prior = NULL, theta_inf = 0.
     for (j in 1:m) {
       # update Gamma by row
       covar <- solve(diag(k) + (1/Sigma_xi[j, j]) * eta.T %*% eta)
-      mean <- covar %*% ( (1/Sigma_xi[j, j]) * (eta.T %*%  xi[ , j] - apply(eta, c(1), etai_Omega_etai, Omega = Omegas[j,,]) ) )
+      mean <- covar %*% ( (1/Sigma_xi[j, j]) * (eta.T %*%  xi[ , j] - eta.T %*% apply(eta, c(1), etai_Omega_etai, Omega = Omegas[j,,]) ) )
       Ga[j, ] <- bayesSurv::rMVNorm(n = 1, mean = mean, Sigma = covar) 
     }
     Ga.T <- t(Ga) # update transpose of Gamma
