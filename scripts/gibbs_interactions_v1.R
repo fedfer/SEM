@@ -12,7 +12,7 @@ source("scripts/functions_CUSP_updates.R")
 
 # Gibbs sampler--------------------------------------------------------
 gibbs <- function(X, Y, nrun, burn, thin = 1, alpha_prior = NULL, theta_inf = 0.05,
-                  k = NULL, m = NULL, a = 1/2){
+                  k = NULL, m = NULL, a = 1/2, delta_rw = 1){
   
   n <- nrow(X)
   p <- ncol(X)
@@ -137,7 +137,8 @@ gibbs <- function(X, Y, nrun, burn, thin = 1, alpha_prior = NULL, theta_inf = 0.
     # Update eta matrix by row using metropolis hastings
     for (h in 1:n) {
       # Propose eta_star
-      eta_star <- bayesSurv::rMVNorm(n = 1, mean = rep(x = 0, times = k), Sigma = diag(rep(x = 1, times = k))) # Propose from a dumb proposal for now
+      # eta_star <- bayesSurv::rMVNorm(n = 1, mean = rep(x = 0, times = k), Sigma = diag(rep(x = 1, times = k))) # Propose from a dumb proposal for now
+      eta_star <- bayesSurv::rMVNorm(1,eta[h,],diag(k)*delta_rw)
       eta_star.T <- t(eta_star)     # avoid repeated transpose calls
       eta.T <- t(eta[h,]) # abuse notation, corrected after this metropolis update
       
@@ -254,6 +255,20 @@ gibbs <- function(X, Y, nrun, burn, thin = 1, alpha_prior = NULL, theta_inf = 0.
       Omegas_st[count, , , ] <- Omegas
       count <- count + 1
     }
+    
+    # Adjust delta_rw for metropolis hastings
+    if (i%%100==0){
+      print(i)
+      acp_mean = mean(acp)/100
+      print(acp_mean)
+      if(acp_mean > 0.3){
+        delta_rw = delta_rw*2
+      }else if(acp_mean < 0.2){
+        delta_rw = delta_rw*2/3
+      }
+      acp = numeric(n)
+    }
+    
     
   }
   

@@ -83,13 +83,12 @@ mean(gibbs_test[["Phi_st"]][,1,1])
 true_Phi[1,1]
 
 # Traceplot
-plot(x = 1:n_samples, y = gibbs_test[["coeff_st"]][,3,8], type = "l", lty = 1)
+plot(x = 1:n_samples, y = gibbs_test[["coeff_st"]][,3,8], type = "l", lty = 1) 
 abline(h = true_coeff[3,8], col = "red")
 
 
 # Running averages plot
 plot(x = 1:n_samples, y = cumsum(gibbs_test[["Phi_st"]][,1,1])/1:n_samples, type = "l", lty = 1)
-
 
 
 
