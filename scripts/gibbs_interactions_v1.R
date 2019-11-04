@@ -90,7 +90,7 @@ gibbs <- function(X, Y, nrun, burn, thin = 1, alpha_prior = NULL, theta_inf = 0.
   
   for (s in 1:nrun) {
     
-    print(paste("iteration", s))
+    # print(paste("iteration", s))
     
     # --- Update Psi --- #
     # With or without interaction terms, this stays the same
@@ -257,8 +257,8 @@ gibbs <- function(X, Y, nrun, burn, thin = 1, alpha_prior = NULL, theta_inf = 0.
     }
     
     # Adjust delta_rw for metropolis hastings
-    if (i%%100==0){
-      print(i)
+    if (s%%100==0){
+      print(paste("iteration", s))
       acp_mean = mean(acp)/100
       print(acp_mean)
       if(acp_mean > 0.3){
