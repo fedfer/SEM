@@ -644,6 +644,19 @@ save(df_cov, file = "~/SEM/data/nhanes_cov_1516.RData")
 save(df_out, file = "~/SEM/data/nhanes_out_1516.RData")
 
 
+# Chemical specific data
+df_metals = join_all(list(chromium_cobalt,copper_etc,mercury_blood,
+                        mercury_urine,metals_blood,metals_urine,
+                        spec_arsernic_urine), 
+                   by='SEQN', type='full')
+df_phalates_pfas = join_all(list(pfas,phthalate), 
+                   by='SEQN', type='full')
+save(df_metals, file = "~/SEM/data/nhanes_metals_1516.RData")
+save(df_phalates_pfas, file = "~/SEM/data/nhanes_phalates_pfas_1516.RData")
+
+
+
+
 
 
 
