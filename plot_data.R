@@ -5,9 +5,31 @@ library(reshape2)
 library(naniar)
 
 
+load("~/SEM/data/nhanes_1516.RData")
+load(file = "data/nhanes_metals_1516.RData")
+
+# Plot histogram Metals
+df_metals_log = df_metals %>% 
+  select(-SEQN) %>% 
+  log(., base = 10) %>% 
+  cbind(df_metals$SEQN, .) %>%  #but the name of the column is not pretty
+  mutate(SEQN = df_metals$SEQN) %>% #so we append new column named SEQN to the end of dataset
+  select(- c("df_metals$SEQN","SEQN"))
+
+df_metals_log[,11:22] %>%
+  gather() %>% 
+  ggplot(aes(value)) +
+  facet_wrap(~ key, scales = "free") +
+  geom_histogram()
+
+quantile(df_metals$LBXBCR, na.rm = T)
+quantile(df_metals$LBXIHG, na.rm = T)
 
 # matrix 0-1 for missing data
+<<<<<<< HEAD
 load("data/nhanes_1516.RData")
+=======
+>>>>>>> c7fb18cba9125f7538c872dce20924871f2b1feb
 df_01 = df %>% is.na()
 df_01 %>% as.matrix() %>% image()
 #vis_miss(df_chem, warn_large_data = F)
