@@ -7,7 +7,7 @@ library(naniar)
 
 
 # matrix 0-1 for missing data
-load("~/SEM/data/nhanes_1516.RData")
+load("data/nhanes_1516.RData")
 df_01 = df %>% is.na()
 df_01 %>% as.matrix() %>% image()
 #vis_miss(df_chem, warn_large_data = F)
@@ -15,7 +15,7 @@ df_01 %>% as.matrix() %>% image()
 
 # matrix 0-1 for Limit of Detection
 #vis_miss(df_out, warn_large_data = F)
-load("~/SEM/data/nhanes_chem_1516.RData")
+load("data/nhanes_chem_1516.RData")
 df_chem_noSEQN = df_chem %>% dplyr::select(-SEQN)
 lod =  df_chem_noSEQN %>% apply(., 2, function(x) min(x, na.rm = T))
 chem_lod = df_chem_noSEQN %>% apply(., 2, function(x) min(x, na.rm = T)) %>%
@@ -28,7 +28,7 @@ lod_sum = apply(df_lod, 2 , function(x)  sum(x,na.rm = T))
 hist(lod_sum)
 
 # Correlation plot outcomes
-load("~/SEM/data/nhanes_out_1516.RData")
+load("data/nhanes_out_1516.RData")
 Cor_plot = cor(df_out %>% as.matrix(),use = "pairwise.complete.obs")
 colnames(Cor_plot) = rownames(Cor_plot) = colnames(df_out)
 Cor_plot = melt(Cor_plot)

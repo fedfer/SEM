@@ -27,7 +27,17 @@ df = df %>% select(-SEQN)
 dim(df) #sanity check: ncol(df_cov) + ncol(df_out_analysis) + ncol(df_metals_log) - 3 should match column numbers of df
 
 
-# maybe we want to log transform some of the outcomes and some of the covariates - do we?
+# maybe we want to log transform some of the outcomes and some of the covariates
+
+
+
+
+
+
+# Some exploratory stuffs --------------------------------------------------
+summary(df)
+
+
 
 
 
