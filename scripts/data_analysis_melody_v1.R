@@ -38,11 +38,28 @@ df_metals_log = df_metals_log %>%
   dplyr::select(- c("LBXBCD", "LBXBCR", "LBXBGE", "LBXBGM", "LBXIHG", "LBXTHG", "URXUAB", "URXUAC", "URXUAS3", "URXUAS5", "URXUCD", "URXUDMA", "URXUHG", "URXUMMA", "URXUMN"))
 
 
+# how many latent factors?
+dim(df_metals_log)
+cor_metals = df_metals_log %>% 
+  dplyr::select(-SEQN) %>% 
+  cor(. ,use="complete.obs") 
+eig_metals = cor_metals %>% eigen()
+plot(eig_metals$values)
+cumsum(eig_metals$values)/sum(eig_metals$values)
+
 # Get values limit of detection in metals (original scale)--------------------------
 df_metals_noSEQN <- df_metals %>% dplyr::select(-SEQN)
 lod <- df_metals_noSEQN %>% apply(., 2, function(x){min(x, na.rm = TRUE)})
 
 # Join dataset--------------------------
+cor(df_out_analysis, use="complete.obs")
+cor_out = df_out_analysis %>% 
+  dplyr::select(-SEQN) %>% 
+  cor(. ,use="complete.obs") 
+eig_out = cor_out %>% eigen()
+plot(eig_out$values)
+cumsum(eig_out$values)/sum(eig_out$values)
+
 df_out_analysis = df_out %>% dplyr::select(SEQN,BPXSY1,BPXDI1,
                                     BMXWAIST,BMXBMI)
 df = join_all(list(df_out_analysis,
