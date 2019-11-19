@@ -7,13 +7,14 @@ library(statmod)
 library(GIGrvg)
 library(mvtnorm)
 library(truncnorm)
+library(matrixcalc)
 
 # Source custom functions------------------------------------------------------------
 source("scripts/functions_CUSP_updates.R")
 
 # Gibbs sampler--------------------------------------------------------
 gibbs <- function(X, Y, X_NA, Y_NA, X_LOD, LOD_X_vec, nrun, burn, thin = 1, alpha_prior = NULL, theta_inf = 0.05,
-                  k = NULL, m = NULL, a = 1/2, delta_rw = 1){
+                  k = NULL, m = NULL, a = 1/2, delta_rw = 0.1){
   
   X_hollow <- X
   Y_hollow <- Y
@@ -94,7 +95,7 @@ gibbs <- function(X, Y, X_NA, Y_NA, X_LOD, LOD_X_vec, nrun, burn, thin = 1, alph
   
   for (s in 1:nrun) {
     
-    # print(paste("iteration", s))
+    print(paste("iteration", s))
     
     # --- Update Psi --- #
     # With or without interaction terms, this stays the same
@@ -155,6 +156,11 @@ gibbs <- function(X, Y, X_NA, Y_NA, X_LOD, LOD_X_vec, nrun, burn, thin = 1, alph
       vec_Omega_eta_star.T <- t(vec_Omega_eta_star)
       vec_Omega_eta <- apply(Omegas, c(1), etai_Omega_etai, etai = eta[h, ])
       vec_Omega_eta.T <- t(vec_Omega_eta)
+      
+      # print(paste("iteration", s))
+      # print(is.diagonal.matrix(Psi))
+      # print(sum(diag(Psi)))
+      
       logr <- (xi.T - eta_star.T %*% Ga.T - vec_Omega_eta_star.T) %*% solve(Sigma_xi) %*% (xi[h, ] - Ga %*% eta_star - vec_Omega_eta_star) +
         (X.T - eta_star.T %*% Lambda_x.T) %*% solve(Psi) %*% (X[h, ] - Lambda_x %*% eta_star) + 
         eta_star.T %*% eta_star -
@@ -281,22 +287,28 @@ gibbs <- function(X, Y, X_NA, Y_NA, X_LOD, LOD_X_vec, nrun, burn, thin = 1, alph
     for (i in 1:nrow(X_LOD)) {
       for(c in 1:ncol(X_LOD)){
         if(X_LOD[i,c] != 0){
-          X_LOD[i, c] <- log( truncnorm::rtruncnorm(n = 1, a = 0, b = LOD_X_vec[c], mean = Lambda_x[c, ] %*% eta[i, ], sd = sqrt(Psi[c, c]) ) )
+          X_LOD[i, c] <- truncnorm::rtruncnorm(n = 1, a = -Inf, b = LOD_X_vec[c], mean = Lambda_x[c, ] %*% eta[i, ], sd = sqrt(Psi[c, c]) )
         }
       }
     }
     
-    # Sample Y_LOD
-    # for (i in 1:nrow(Y_LOD)) {
-    #   for (c in 1:ncol(Y_LOD)) {
-    #     if (Y_LOD[i, c] != 0) {
-    #       Y_LOD <- log( truncnorm::rtruncnorm(n = 1, a = 0, b = LOD_Y_vec[c], mean = Lambda_y[c, ] %*% xi[i, ], sd = sqrt(Phi[c, c]) ) )
-    #     }
-    #   }
-    # }
+    # print("Checking NA's in my updated data")
+    # print("X_hollow")
+    # print(sum(is.na(X_hollow)))
+    # print("Y_hollow")
+    # print(sum(is.na(Y_hollow)))
+    # print("X_NA")
+    # print(sum(is.na(X_NA)))
+    # print("Y_NA")
+    # print(sum(is.na(Y_NA)))
+    # print("X_LOD")
+    # print(sum(is.na(X_LOD)))
+    # print("LOD_X_vec")
+    # print(sum(is.na(LOD_X_vec)))
+    
     
     X <- X_hollow + X_NA + X_LOD
-    Y <- Y_hollow + Y_NA + Y_LOD
+    Y <- Y_hollow + Y_NA
     
     
     

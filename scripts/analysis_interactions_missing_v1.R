@@ -72,7 +72,7 @@ LOD <-  mean(apply(abs(X), 1, min))
 
 
 # Make places where there is NA or LOD 0 -----------------------
-X_hollow <- X
+
 
 
 

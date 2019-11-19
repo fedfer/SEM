@@ -20,7 +20,7 @@ df_metals_log = df_metals %>%
 df_out_analysis = df_out %>% select(SEQN,BPXSY1,BPXDI1,
                                     BMXWAIST,BMXBMI)
 df = join_all(list(df_cov,
-                   df_out_analysis,
+                   df_out_analysis, 
                    df_metals_log), 
               by='SEQN', type='full')
 df = df %>% select(-SEQN)
