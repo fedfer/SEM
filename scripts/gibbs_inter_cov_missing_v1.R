@@ -125,7 +125,10 @@ gibbs <- function(X, Y, X_NA, Y_NA, X_LOD, LOD_X_vec, Z, nrun, burn, thin = 1, a
     interactions <- t(apply(eta, c(1), function(eta_i){
       apply(Omegas, c(1), etai_Omega_etai, etai = eta_i)
     }))
-    # inter_chem_cov
+    tmp <- cbind(eta, Z)
+    inter_chem_cov <- t(apply(tmp, c(1), function(tmp_i){
+      apply(Deltas, c(1), etai_Delta_zi, etai = tmp_i[1:ncol(eta)], zi = tmp_i[(ncol(eta) + 1):ncol(tmp)])
+    }))
     xi_til <- xi - eta %*% Ga.T - interactions
     sig_xis <- rgamma(n = m, shape = as + 0.5*n, rate = 1)
     sig_xis <- (1 / ( bs + 0.5*apply(X = xi_til^2, MARGIN = 2, FUN = sum) ) ) * sig_xis

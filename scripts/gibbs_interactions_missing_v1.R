@@ -115,6 +115,7 @@ gibbs <- function(X, Y, X_NA, Y_NA, X_LOD, LOD_X_vec, nrun, burn, thin = 1, alph
     interactions <- t(apply(eta, c(1), function(eta_i){
       apply(Omegas, c(1), etai_Omega_etai, etai = eta_i)
     }))
+    
     xi_til <- xi - eta %*% Ga.T - interactions
     sig_xis <- rgamma(n = m, shape = as + 0.5*n, rate = 1)
     sig_xis <- (1 / ( bs + 0.5*apply(X = xi_til^2, MARGIN = 2, FUN = sum) ) ) * sig_xis
