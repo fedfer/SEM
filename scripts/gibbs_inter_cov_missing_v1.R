@@ -55,6 +55,7 @@ gibbs <- function(X, Y, X_NA, Y_NA, X_LOD, LOD_X_vec, Z, nrun, burn, thin = 1, a
   
   phis <- rgamma(q,as,bs) 
   Phi <- diag(1/phis)
+  Phi.inv <- solve(Phi)
   
   sig_xis <- rgamma(m, as, bs)
   Sigma_xi <- diag(1/sig_xis)
@@ -81,6 +82,7 @@ gibbs <- function(X, Y, X_NA, Y_NA, X_LOD, LOD_X_vec, Z, nrun, burn, thin = 1, a
   C_dir[k] = prod(v[1:(k-1)])
   
   alpha_mat <- matrix(0, q, l)
+  alpha_mat.T <- t(alpha_mat)
   
   Omegas <- array(data = 0, c(m, k, k)) # For interaction terms
   Deltas <- array(data = 0, c(m, k, l)) # interactions between chemicals and covariates
@@ -102,6 +104,10 @@ gibbs <- function(X, Y, X_NA, Y_NA, X_LOD, LOD_X_vec, Z, nrun, burn, thin = 1, a
     return(t(etai) %*% Delta %*% zi)
   }
   
+  etai_Delta_zi_one_mat <- function(Delta, etai_and_zi){
+    return(t(etai_and_zi[1:k]) %*% Delta %*% etai_and_zi[(k + 1):ncol(etai_and_zi)])
+  }
+  
   
   for (s in 1:nrun) {
     
@@ -114,14 +120,14 @@ gibbs <- function(X, Y, X_NA, Y_NA, X_LOD, LOD_X_vec, Z, nrun, burn, thin = 1, a
     ps <- (1 / ( bs + 0.5*apply(X = Xtil^2, MARGIN = 2, FUN = sum) ) ) * ps
     Psi <- diag(1 / ps)
     
-    # --- Update Phi ---#
-    # With or without interaction terms, this stays the same
-    Ytil <- Y - xi %*% Lambda_y.T
+    # --- Update Phi ---# # Added non-chem covariates
+    Ytil <- Y - xi %*% Lambda_y.T - Z %*% alpha_mat.T
     phis <- rgamma(n = q, shape = as + 0.5*n, rate = 1)
     phis <- (1 / ( bs + 0.5*apply(X = Ytil^2, MARGIN = 2, FUN = sum) ) ) * phis
     Phi <- diag(1 / phis)
+    Phi.inv <- solve(Phi)
     
-    # --- Update Sigma_xi ---#
+    # --- Update Sigma_xi ---# #Added non-chem covariates
     interactions <- t(apply(eta, c(1), function(eta_i){
       apply(Omegas, c(1), etai_Omega_etai, etai = eta_i)
     }))
@@ -129,30 +135,33 @@ gibbs <- function(X, Y, X_NA, Y_NA, X_LOD, LOD_X_vec, Z, nrun, burn, thin = 1, a
     inter_chem_cov <- t(apply(tmp, c(1), function(tmp_i){
       apply(Deltas, c(1), etai_Delta_zi, etai = tmp_i[1:ncol(eta)], zi = tmp_i[(ncol(eta) + 1):ncol(tmp)])
     }))
-    xi_til <- xi - eta %*% Ga.T - interactions
+    xi_til <- xi - eta %*% Ga.T - interactions - inter_chem_cov
     sig_xis <- rgamma(n = m, shape = as + 0.5*n, rate = 1)
     sig_xis <- (1 / ( bs + 0.5*apply(X = xi_til^2, MARGIN = 2, FUN = sum) ) ) * sig_xis
     Sigma_xi <- diag(1/sig_xis)
     
-    # --- Update xi --- #
+    # --- Update xi --- # #Added non-chem covariates
     covar <- solve(Lambda_y.T %*% solve(Phi) %*% Lambda_y + solve(Sigma_xi))
     for (i in 1:n) {
       # update xi matrix by row, without interaction terms
-      mean <- covar %*% ( Lambda_y.T %*% solve(Phi) %*% Y[i, ] + solve(Sigma_xi) %*% (Ga %*% eta[i, ] + apply(Omegas, c(1), etai_Omega_etai, etai = eta[i, ]) ) )
+      mean <- covar %*% ( Lambda_y.T %*% Phi.inv %*% Y[i, ] - Lambda_y.T %*% Phi.inv %*% alpha_mat %*% Z[i, ] +
+                            solve(Sigma_xi) %*% (Ga %*% eta[i, ] + apply(Omegas, c(1), etai_Omega_etai, etai = eta[i, ])  + apply(Deltas, c(1), etai_Delta_zi, etai = eta[i, ], zi = Z[i, ]) ) )
       xi[i, ] <- bayesSurv::rMVNorm(n = 1, mean = mean, Sigma = covar)
     }
     xi.T <- t(xi)
     
-    # --- Update Gamma --- #
+    # --- Update Gamma --- #  # Added non-chem covariates
+    tmp <- cbind(eta, Z)
     for (j in 1:m) {
       # update Gamma by row
       covar <- solve(diag(k) + (1/Sigma_xi[j, j]) * eta.T %*% eta)
-      mean <- covar %*% ( (1/Sigma_xi[j, j]) * (eta.T %*%  xi[ , j] - eta.T %*% apply(eta, c(1), etai_Omega_etai, Omega = Omegas[j,,]) ) )
+      mean <- covar %*% ( (1/Sigma_xi[j, j]) * (eta.T %*%  xi[ , j] - eta.T %*% apply(eta, c(1), etai_Omega_etai, Omega = Omegas[j,,]) -
+                                                  eta.T %*%  apply(tmp, c(1), etai_Delta_zi_one_mat, Delta = Deltas[j,,] )) )
       Ga[j, ] <- bayesSurv::rMVNorm(n = 1, mean = mean, Sigma = covar) 
     }
     Ga.T <- t(Ga) # update transpose of Gamma
     
-    # --- Update eta --- #
+    # --- Update eta --- # # Added non-chem covariates
     # Update eta matrix by row using metropolis hastings
     for (h in 1:n) {
       # Propose eta_star
