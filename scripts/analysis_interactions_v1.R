@@ -59,8 +59,15 @@ for (i in 1:n) {
 
 true_V_n <- solve(true_Lambda_x.T %*% solve(true_Psi) %*% true_Lambda_x + solve(true_Sigma_eta))
 true_A_n <- true_V_n %*% true_Lambda_x.T %*% solve(true_Psi)
+true_A_n.T <- t(true_A_n)
 true_coeff <- true_Lambda_y %*% true_Ga %*% true_A_n
 
+true_inter_coeff <- array(data = 0, c(q, p, p))
+for (i in 1:q) {
+  for (j in 1:m) {
+    true_inter_coeff[i,,] <- true_inter_coeff[i,,] + true_Lambda_y[i, j] * (true_A_n.T %*% true_Omegas[j,,] %*% true_A_n)
+  }
+}
 
 
 # Gibbs sampler with interactions------------------------------------------------------------
@@ -70,12 +77,19 @@ n_samples = nrun - burn
 
 gibbs_test <- gibbs(X = X, Y = Y, nrun = nrun, burn = burn, thin = 1, 
                     alpha_prior = NULL, theta_inf = 0.05,
-                    m = m, k = k)
+                    m = m, k = k, delta_rw = 0.5)
 
+# Coefficients for main effect
 est_coeff = apply(gibbs_test$coeff_st,c(2,3),mean)
 # Compute error 
 err = est_coeff-true_coeff
 err %>% abs() %>% mean()
+
+# Coefficients for interactions
+est_inter_coeff <- apply(gibbs_test$inter_coeff_st,c(2, 3, 4),mean)
+# Compute error
+err_inter_coeff_1 <- est_inter_coeff[1,,] - true_inter_coeff[1,,]
+err_inter_coeff_1 %>% abs() %>% mean()
 
 # Traceplot
 plot(x = 1:n_samples, y = gibbs_test[["Phi_st"]][,1,1], type = "l", lty = 1)

@@ -79,6 +79,7 @@ gibbs <- function(X, Y, nrun, burn, thin = 1, alpha_prior = NULL, theta_inf = 0.
   Psi_st <- array(0, c(nrun - burn, p, p))
   coeff_st <- array(0, c(nrun - burn, q, p)) # Maybe a better name for this
   Omegas_st <- array(0, c(nrun - burn, m, k, k)) # For interaction terms
+  inter_coeff_st <- array(0, c(nrun - burn, q, p, p))
   acp <- numeric(n)
   count <- 1 # sample timing
   
@@ -243,6 +244,25 @@ gibbs <- function(X, Y, nrun, burn, thin = 1, alpha_prior = NULL, theta_inf = 0.
                                  omega_dir = C_dir, b_theta, a_theta, theta_inf, z_ind, P_z,
                                  v, alpha_prior)
     
+    ### --- Update Omegas --- ###
+    MM <- model.matrix(~ .^2 - 1,as.data.frame(eta)) # factorized regression, so that we can make use of the interaction terms
+    eta_inter <- cbind(eta^2, MM[, (k + 1):ncol(MM)]) # this is the eta star in paper
+    eta_inter.T <- t(eta_inter) # avoid repeated transpose calls
+    # Update each Omega_j one by one
+    for (j in 1:m) {
+      covar <- solve( eta_inter.T %*% eta_inter / Sigma_xi[j, j] + diag(rep(1, ncol(eta_inter))) )
+      mean <- covar %*% eta_inter.T %*% (xi[, j] - eta %*% Ga[j, ]) / Sigma_xi[j, j]
+      omega_j_star <- bayesSurv::rMVNorm(n = 1, mean = mean, Sigma = covar)
+      Omega_j_diag <- omega_j_star[1:k]
+      omega_j_lower_triag <- omega_j_star[(k + 1):length(omega_j_star)]
+      Omega_j <- Omegas[j, , ]
+      Omega_j[lower.tri(Omega_j)] <- omega_j_lower_triag/2
+      Omega_j[upper.tri(Omega_j)] <- 0
+      Omega_j <- Omega_j + t(Omega_j)
+      diag(Omega_j) <- Omega_j_diag
+      Omegas[j, , ] <- Omega_j
+    }
+    
     
     # Store posterior samples
     if(s > burn){
@@ -251,8 +271,15 @@ gibbs <- function(X, Y, nrun, burn, thin = 1, alpha_prior = NULL, theta_inf = 0.
       Psi_st[count, , ] <- Psi
       V_n <- solve(Lambda_x.T %*% solve(Psi) %*% Lambda_x + solve(Sigma_eta))
       A_n <- V_n %*% Lambda_x.T %*% solve(Psi)
+      A_n.T <- t(A_n)
       coeff_st[count, , ] <- Lambda_y %*% Ga %*% A_n
       Omegas_st[count, , , ] <- Omegas
+      inter_coeff_st[count, , , ] <- array(data = 0, c(q, p, p))
+      for (i in 1:q) {
+        for (j in 1:m) {
+          inter_coeff_st[count, i, , ] <- inter_coeff_st[count, i, , ] + Lambda_y[i, j] * (A_n.T %*% Omegas[j,,] %*% A_n)
+        }
+      }
       count <- count + 1
     }
     
@@ -276,7 +303,8 @@ gibbs <- function(X, Y, nrun, burn, thin = 1, alpha_prior = NULL, theta_inf = 0.
               Psi_st = Psi_st,
               coeff_st = coeff_st,
               Omegas_st = Omegas_st,
-              acp = acp/(nrun-burn)
+              acp = acp/(nrun-burn),
+              inter_coeff_st = inter_coeff_st
               ))
   
 }
