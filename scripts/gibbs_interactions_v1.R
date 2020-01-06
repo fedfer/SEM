@@ -274,7 +274,6 @@ gibbs <- function(X, Y, nrun, burn, thin = 1, alpha_prior = NULL, theta_inf = 0.
       A_n.T <- t(A_n)
       coeff_st[count, , ] <- Lambda_y %*% Ga %*% A_n
       Omegas_st[count, , , ] <- Omegas
-      inter_coeff_st[count, , , ] <- array(data = 0, c(q, p, p))
       for (i in 1:q) {
         for (j in 1:m) {
           inter_coeff_st[count, i, , ] <- inter_coeff_st[count, i, , ] + Lambda_y[i, j] * (A_n.T %*% Omegas[j,,] %*% A_n)

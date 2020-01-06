@@ -16,6 +16,7 @@ source("scripts/functions_CUSP_updates.R")
 gibbs <- function(X, Y, X_NA, Y_NA, X_LOD, LOD_X_vec, nrun, burn, thin = 1, alpha_prior = NULL, theta_inf = 0.05,
                   k = NULL, m = NULL, a = 1/2, delta_rw = 0.1){
   # X_NA and Y_NA are 0-1 matrices with 1 indicating where there is missing data
+  # X_LOD is a 0-1 matrix with 1 indicating where there is limit of ditection
   
   X_hollow <- X
   Y_hollow <- Y
