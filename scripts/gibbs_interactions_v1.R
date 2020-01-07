@@ -79,7 +79,7 @@ gibbs <- function(X, Y, nrun, burn, thin = 1, alpha_prior = NULL, theta_inf = 0.
   Psi_st <- array(0, c(nrun - burn, p, p))
   coeff_st <- array(0, c(nrun - burn, q, p)) # Maybe a better name for this
   Omegas_st <- array(0, c(nrun - burn, m, k, k)) # For interaction terms
-  inter_coeff_st <- array(0, c(nrun - burn, q, p, p))
+  inter_coeff_st <- array(0, c(nrun - burn, q, p, p)) # added to gibbs_inter_cov_missing
   acp <- numeric(n)
   count <- 1 # sample timing
   
@@ -244,7 +244,7 @@ gibbs <- function(X, Y, nrun, burn, thin = 1, alpha_prior = NULL, theta_inf = 0.
                                  omega_dir = C_dir, b_theta, a_theta, theta_inf, z_ind, P_z,
                                  v, alpha_prior)
     
-    ### --- Update Omegas --- ###
+    ### --- Update Omegas --- ### # added to gibbs_inter_cov_missing
     MM <- model.matrix(~ .^2 - 1,as.data.frame(eta)) # factorized regression, so that we can make use of the interaction terms
     eta_inter <- cbind(eta^2, MM[, (k + 1):ncol(MM)]) # this is the eta star in paper
     eta_inter.T <- t(eta_inter) # avoid repeated transpose calls

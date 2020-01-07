@@ -1,4 +1,5 @@
 # Gibbs sampler that accomodates interactions, non-chemical covariates, and missing data
+# Using DL Update for Lambda_y
 
 set.seed(42) # set random state
 
@@ -18,8 +19,14 @@ source("scripts/functions_CUSP_updates.R")
 gibbs <- function(X, Y, X_NA, Y_NA, X_LOD, LOD_X_vec, Z, nrun, burn, thin = 1, alpha_prior = NULL, theta_inf = 0.05,
                   k = NULL, m = NULL, a = 1/2, delta_rw = 0.1){
   
+  # X_NA and Y_NA are 0-1 matrices with 1 indicating where there is missing data
+  # X_LOD is a 0-1 matrix with 1 indicating where there is limit of ditection
+  
   X_hollow <- X
   Y_hollow <- Y
+  
+  Z.T <- t(Z)
+  Z_transpose_Z <- Z.T %*% Z
   
   n <- nrow(X)
   p <- ncol(X)
@@ -92,6 +99,8 @@ gibbs <- function(X, Y, X_NA, Y_NA, X_LOD, LOD_X_vec, Z, nrun, burn, thin = 1, a
   Psi_st <- array(0, c(nrun - burn, p, p))
   coeff_st <- array(0, c(nrun - burn, q, p)) # Maybe a better name for this
   Omegas_st <- array(0, c(nrun - burn, m, k, k)) # For interaction terms
+  inter_coeff_st <- array(0, c(nrun - burn, q, p, p)) # TODO: check with model accomodating for covariates
+  # TODO: coefficients for covariates
   acp <- numeric(n)
   count <- 1 # sample timing
   
@@ -108,6 +117,9 @@ gibbs <- function(X, Y, X_NA, Y_NA, X_LOD, LOD_X_vec, Z, nrun, burn, thin = 1, a
     return(t(etai_and_zi[1:k]) %*% Delta %*% etai_and_zi[(k + 1):ncol(etai_and_zi)])
   }
   
+  get_eta_Z_inter <- function(etai_and_zi){
+    return(expand.grid(etai_and_zi[1:k], etai_and_zi[(k + 1):ncol(etai_and_zi)]))
+  }
   
   for (s in 1:nrun) {
     
@@ -212,7 +224,11 @@ gibbs <- function(X, Y, X_NA, Y_NA, X_LOD, LOD_X_vec, Z, nrun, burn, thin = 1, a
     
     
     # --- DL Update for Lambda_y --- #
-    # With or without interaction terms, this stays the same
+    # With or without interaction terms, this stays the same.
+    # Added terms associated with covariates
+    
+    Y_minus_cov <- Y - Z %*% alpha_mat.T
+    
     # --- Update Lambda_y  --- #
     Plam = rhojh*(zetajh^2)*matrix(rep(tau^2,m),q,m,byrow=F)
     xi2 <- xi.T %*% xi
@@ -224,7 +240,7 @@ gibbs <- function(X, Y, X_NA, Y_NA, X_LOD, LOD_X_vec, Z, nrun, burn, thin = 1, a
                              zlams[1:m + (j-1)*m]) + 
                          solve(Llamt,
                                solve(t(Llamt),
-                                     phis[j] * xi.T %*% Y[,j])))
+                                     phis[j] * xi.T %*% Y_minus_cov[,j])))
     }
     
     Lambda_y.T = t(Lambda_y)
@@ -252,7 +268,7 @@ gibbs <- function(X, Y, X_NA, Y_NA, X_LOD, LOD_X_vec, Z, nrun, burn, thin = 1, a
     }
     
     
-    # --- CUSP update for Lambda_x --- #
+    # --- CUSP update for Lambda_x --- # # remains unchanged
     # With or without interaction terms, this stays the same
     # --- Update Lambda_x --- #
     Lambda_x <- CUSP_update_Lambda(Lambda = Lambda_x, X , eta, eta.T, k, p, theta, ps,
@@ -280,6 +296,54 @@ gibbs <- function(X, Y, X_NA, Y_NA, X_LOD, LOD_X_vec, Z, nrun, burn, thin = 1, a
     theta <- CUSP_update_theta_h(Lambda = Lambda_x, X , eta, eta.T, k, p, theta, ps,
                                  omega_dir = C_dir, b_theta, a_theta, theta_inf, z_ind, P_z,
                                  v, alpha_prior)
+    
+    
+    ### --- Update Omegas --- ### # Added non-chem covariates
+    MM <- model.matrix(~ .^2 - 1,as.data.frame(eta)) # factorized regression, so that we can make use of the interaction terms
+    eta_inter <- cbind(eta^2, MM[, (k + 1):ncol(MM)]) # this is the eta star in paper
+    eta_inter.T <- t(eta_inter) # avoid repeated transpose calls
+    tmp <- cbind(eta, Z)
+    inter_chem_cov <- t(apply(tmp, c(1), function(tmp_i){
+      apply(Deltas, c(1), etai_Delta_zi, etai = tmp_i[1:ncol(eta)], zi = tmp_i[(ncol(eta) + 1):ncol(tmp)])
+    }))
+    # Update each Omega_j one by one
+    for (j in 1:m) {
+      covar <- solve( eta_inter.T %*% eta_inter / Sigma_xi[j, j] + diag(rep(1, ncol(eta_inter))) )
+      mean <- covar %*% eta_inter.T %*% (xi[, j] - eta %*% Ga[j, ] - inter_chem_cov[, j]) / Sigma_xi[j, j]
+      omega_j_star <- bayesSurv::rMVNorm(n = 1, mean = mean, Sigma = covar)
+      Omega_j_diag <- omega_j_star[1:k]
+      omega_j_lower_triag <- omega_j_star[(k + 1):length(omega_j_star)]
+      Omega_j <- Omegas[j, , ]
+      Omega_j[lower.tri(Omega_j)] <- omega_j_lower_triag/2
+      Omega_j[upper.tri(Omega_j)] <- 0
+      Omega_j <- Omega_j + t(Omega_j)
+      diag(Omega_j) <- Omega_j_diag
+      
+      Omegas[j, , ] <- Omega_j
+    }
+    
+    ### --- Update alpha_mat --- ###
+    for (j in 1:q) {
+      covar <- solve( diag(l) + Z_transpose_Z / Phi[j, j] )
+      mean <- covar %*% ( Z.T %*% ( Y[,j] - xi %*% Lambda_y[j, ] ) /Phi[j, j])
+      alpha_mat[j, ] <- bayesSurv::rMVNorm(n = 1, mean = mean, Sigma = covar)
+    }
+    
+    ### --- Update Deltas --- ###
+    tmp <- cbind(eta, Z)
+    eta_Z_inter <- apply(tmp, c(1), get_eta_Z_inter)
+    eta_Z_inter.T <- t(eta_Z_inter) #avoid repeated transpose calls
+    eta_Z_inter_transpose_eta_Z_inter <- eta_Z_inter.T %*% eta_Z_inter # avoid repeated calls
+    interactions <- t(apply(eta, c(1), function(eta_i){
+      apply(Omegas, c(1), etai_Omega_etai, etai = eta_i)
+    }))
+    # Update each Delta_j one by one
+    for (j in 1:m) {
+      covar <- solve( diag(k*l) + eta_Z_inter_transpose_eta_Z_inter / Sigma_xi[j, j] )
+      mean <- covar %*% eta_Z_inter.T %*% ( xi[, j] -  eta %*% Ga[j, ] -  interactions[, j] ) / Sigma_xi[j, j]
+      delta_j_star <- bayesSurv::rMVNorm(n = 1, mean = mean, Sigma = covar)
+      Deltas[j, , ] <- matrix(data = delta_j_star, nrow = k, ncol = l)
+    }
     
     #######################
     # Sample missing data #
@@ -347,8 +411,14 @@ gibbs <- function(X, Y, X_NA, Y_NA, X_LOD, LOD_X_vec, Z, nrun, burn, thin = 1, a
       Psi_st[count, , ] <- Psi
       V_n <- solve(Lambda_x.T %*% solve(Psi) %*% Lambda_x + solve(Sigma_eta))
       A_n <- V_n %*% Lambda_x.T %*% solve(Psi)
+      A_n.T <- t(A_n)
       coeff_st[count, , ] <- Lambda_y %*% Ga %*% A_n
       Omegas_st[count, , , ] <- Omegas
+      for (i in 1:q) {
+        for (j in 1:m) {
+          inter_coeff_st[count, i, , ] <- inter_coeff_st[count, i, , ] + Lambda_y[i, j] * (A_n.T %*% Omegas[j,,] %*% A_n)
+        }
+      }
       count <- count + 1
     }
     
@@ -372,7 +442,8 @@ gibbs <- function(X, Y, X_NA, Y_NA, X_LOD, LOD_X_vec, Z, nrun, burn, thin = 1, a
               Psi_st = Psi_st,
               coeff_st = coeff_st,
               Omegas_st = Omegas_st,
-              acp = acp/(nrun-burn)
-  ))
+              acp = acp/(nrun-burn),
+              inter_coeff_st = inter_coeff_st
+              ))
   
 }
