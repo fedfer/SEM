@@ -100,7 +100,7 @@ gibbs <- function(X, Y, X_NA, Y_NA, X_LOD, LOD_X_vec, Z, nrun, burn, thin = 1, a
   coeff_st <- array(0, c(nrun - burn, q, p)) # Maybe a better name for this
   Omegas_st <- array(0, c(nrun - burn, m, k, k)) # For interaction terms
   inter_coeff_st <- array(0, c(nrun - burn, q, p, p)) # TODO: check with model accomodating for covariates
-  # TODO: coefficients for covariates
+  inter_cov_coeff_st <- array(0, c(nrun - burn, q, p, l) )
   acp <- numeric(n)
   count <- 1 # sample timing
   
@@ -419,6 +419,11 @@ gibbs <- function(X, Y, X_NA, Y_NA, X_LOD, LOD_X_vec, Z, nrun, burn, thin = 1, a
           inter_coeff_st[count, i, , ] <- inter_coeff_st[count, i, , ] + Lambda_y[i, j] * (A_n.T %*% Omegas[j,,] %*% A_n)
         }
       }
+      for (i in 1:q) {
+        for (j in 1:m) {
+          inter_cov_coeff_st[count, i, , ] <- inter_cov_coeff_st[count, i, , ] + Lambda_y[i, j] * ( A_n.T %*% Deltas[j,,] )
+        }
+      }
       count <- count + 1
     }
     
@@ -443,7 +448,8 @@ gibbs <- function(X, Y, X_NA, Y_NA, X_LOD, LOD_X_vec, Z, nrun, burn, thin = 1, a
               coeff_st = coeff_st,
               Omegas_st = Omegas_st,
               acp = acp/(nrun-burn),
-              inter_coeff_st = inter_coeff_st
+              inter_coeff_st = inter_coeff_st,
+              inter_cov_coeff_st = inter_cov_coeff_st
               ))
   
 }
