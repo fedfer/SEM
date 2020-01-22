@@ -631,6 +631,9 @@ df_cov = join_all(list(people,albumin_creatinine_nhanes,
                        arsenic,chlamydia), 
                    by='SEQN', type='full')
 
+df_cov_analysis = join_all(list(people,chol), 
+                  by='SEQN', type='full')
+
 df = join_all(list(df_cov,
                    df_out,
                    df_chem), 
@@ -641,6 +644,7 @@ df = join_all(list(df_cov,
 save(df, file = "~/SEM/data/nhanes_1516.RData")
 save(df_chem, file = "~/SEM/data/nhanes_chem_1516.RData")
 save(df_cov, file = "~/SEM/data/nhanes_cov_1516.RData")
+save(df_cov_analysis, file = "~/SEM/data/nhanes_cov_simple_1516.RData")
 save(df_out, file = "~/SEM/data/nhanes_out_1516.RData")
 
 
