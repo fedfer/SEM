@@ -8,6 +8,9 @@ load(file = "data/nhanes_cov_1516.RData")
 load(file = "data/nhanes_out_1516.RData")
 load(file = "data/nhanes_metals_1516.RData")
 
+# Examine data----------------------------------------------------
+
+
 # source ----------------------------------------
 source("scripts/gibbs_interactions_missing_v1.R")
 

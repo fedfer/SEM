@@ -26,10 +26,7 @@ quantile(df_metals$LBXBCR, na.rm = T)
 quantile(df_metals$LBXIHG, na.rm = T)
 
 # matrix 0-1 for missing data
-<<<<<<< HEAD
 load("data/nhanes_1516.RData")
-=======
->>>>>>> c7fb18cba9125f7538c872dce20924871f2b1feb
 df_01 = df %>% is.na()
 df_01 %>% as.matrix() %>% image()
 #vis_miss(df_chem, warn_large_data = F)

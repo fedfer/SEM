@@ -38,7 +38,20 @@ true_Ga.T <- t(true_Ga)
 true_eta <- matrix(rnorm(n*k),n,k)
 true_eta.T <- t(true_eta)
 
-true_Omegas <- array(data = rnorm(m*k*k), c(m, k, k))
+true_Omegas <- array(data = 0, c(m, k, k))
+num_entry_lower_triag <- (k*k - length(diag(true_Omegas[1,,])) )/2
+for (j in 1:m) {
+  true_Omega_j_lower_triag_vals <- bayesSurv::rMVNorm(n = 1, mean = rep(0, times = num_entry_lower_triag),
+                                                     Sigma = diag(1, nrow = num_entry_lower_triag, ncol = num_entry_lower_triag))
+  true_Omegas[j,,][lower.tri(true_Omegas[j,,])] <- true_Omega_j_lower_triag_vals/2
+  true_Omegas[j,,][upper.tri(true_Omegas[j,,])] <- 0
+  true_Omegas[j,,] <- true_Omegas[j,,] + t(true_Omegas[j,,])
+  true_Omega_j_diag_vals <- bayesSurv::rMVNorm(n = 1, mean = rep(0, times = k),
+                                               Sigma = diag(1, nrow = k, ncol = k))
+  diag(true_Omegas[j,,]) <- true_Omega_j_diag_vals
+}
+ 
+
 
 interactions <- t(apply(true_eta, c(1), function(eta_i){
   apply(true_Omegas, c(1), etai_Omega_etai, etai = eta_i)
@@ -59,8 +72,15 @@ for (i in 1:n) {
 
 true_V_n <- solve(true_Lambda_x.T %*% solve(true_Psi) %*% true_Lambda_x + solve(true_Sigma_eta))
 true_A_n <- true_V_n %*% true_Lambda_x.T %*% solve(true_Psi)
+true_A_n.T <- t(true_A_n)
 true_coeff <- true_Lambda_y %*% true_Ga %*% true_A_n
 
+true_inter_coeff <- array(data = 0, c(q, p, p))
+for (i in 1:q) {
+  for (j in 1:m) {
+    true_inter_coeff[i,,] <- true_inter_coeff[i,,] + true_Lambda_y[i, j] * (true_A_n.T %*% true_Omegas[j,,] %*% true_A_n)
+  }
+}
 
 
 # Gibbs sampler with interactions------------------------------------------------------------
@@ -70,21 +90,39 @@ n_samples = nrun - burn
 
 gibbs_test <- gibbs(X = X, Y = Y, nrun = nrun, burn = burn, thin = 1, 
                     alpha_prior = NULL, theta_inf = 0.05,
-                    m = m, k = k)
+                    m = m, k = k, delta_rw = 0.5)
 
+# Coefficients for main effect
 est_coeff = apply(gibbs_test$coeff_st,c(2,3),mean)
 # Compute error 
 err = est_coeff-true_coeff
 err %>% abs() %>% mean()
+est_coeff
+true_coeff
+
+# Coefficients for interactions
+est_inter_coeff <- apply(gibbs_test$inter_coeff_st,c(2, 3, 4),mean)
+# Compute error
+err_inter_coeff_1 <- est_inter_coeff[1,,] - true_inter_coeff[1,,]
+err_inter_coeff_1 %>% abs() %>% mean()
+est_inter_coeff[1,,]
+true_inter_coeff[1,,]
 
 # Traceplot
 plot(x = 1:n_samples, y = gibbs_test[["Phi_st"]][,1,1], type = "l", lty = 1)
 mean(gibbs_test[["Phi_st"]][,1,1])
 true_Phi[1,1]
 
-# Traceplot
+# Traceplot for coefficients
 plot(x = 1:n_samples, y = gibbs_test[["coeff_st"]][,3,8], type = "l", lty = 1) 
 abline(h = true_coeff[3,8], col = "red")
+
+# Traceplot for coefficients for interactions
+plot(x = 1:n_samples, y = gibbs_test[["inter_coeff_st"]][,1,3,8], type = "l", lty = 1)
+abline(h = true_inter_coeff[1,3,8], col = "red")
+
+# Running averages plot for coefficients for interactions
+plot(x = 1:n_samples, y = cumsum(gibbs_test[["inter_coeff_st"]][,1,3,8])/1:n_samples, type = "l", lty = 1)
 
 
 # Running averages plot
