@@ -114,11 +114,23 @@ gibbs <- function(X, Y, X_NA, Y_NA, X_LOD, LOD_X_vec, Z, nrun, burn, thin = 1, a
   }
   
   etai_Delta_zi_one_mat <- function(Delta, etai_and_zi){
-    return(t(etai_and_zi[1:k]) %*% Delta %*% etai_and_zi[(k + 1):ncol(etai_and_zi)])
+    etai_and_zi <- as.matrix(etai_and_zi)
+    # print("dimension of etai_and_zi")
+    # print(dim(etai_and_zi))
+    # print("k equals")
+    # print(k)
+    # print("dimension of Delta")
+    # print(dim(Delta))
+    # print("ncol")
+    # print(ncol(etai_and_zi))
+    return(t(etai_and_zi[1:k]) %*% Delta %*% etai_and_zi[(k + 1):nrow(etai_and_zi)])
   }
   
   get_eta_Z_inter <- function(etai_and_zi){
-    return(expand.grid(etai_and_zi[1:k], etai_and_zi[(k + 1):ncol(etai_and_zi)]))
+    etai_and_zi <- as.matrix(etai_and_zi)
+    grid <- expand.grid(etai_and_zi[1:k], etai_and_zi[(k + 1):nrow(etai_and_zi)])
+    inter <- grid$Var1 * grid$Var2
+    return(inter)
   }
   
   for (s in 1:nrun) {
@@ -331,7 +343,7 @@ gibbs <- function(X, Y, X_NA, Y_NA, X_LOD, LOD_X_vec, Z, nrun, burn, thin = 1, a
     
     ### --- Update Deltas --- ###
     tmp <- cbind(eta, Z)
-    eta_Z_inter <- apply(tmp, c(1), get_eta_Z_inter)
+    eta_Z_inter <- t(apply(tmp, c(1), get_eta_Z_inter))
     eta_Z_inter.T <- t(eta_Z_inter) #avoid repeated transpose calls
     eta_Z_inter_transpose_eta_Z_inter <- eta_Z_inter.T %*% eta_Z_inter # avoid repeated calls
     interactions <- t(apply(eta, c(1), function(eta_i){
@@ -339,6 +351,20 @@ gibbs <- function(X, Y, X_NA, Y_NA, X_LOD, LOD_X_vec, Z, nrun, burn, thin = 1, a
     }))
     # Update each Delta_j one by one
     for (j in 1:m) {
+      # print("update deltas iteration")
+      # print(j)
+      # print("dimension of eta_Z_inter_transpose_eta_Z_inter")
+      # print(dim(eta_Z_inter_transpose_eta_Z_inter))
+      # print("dimension of eta_Z_inter")
+      # print(dim(eta_Z_inter))
+      # print("dimension of eta")
+      # print(dim(eta))
+      # print("dimension of Z")
+      # print(dim(Z))
+      # print("k")
+      # print(k)
+      # print("l")
+      # print(l)
       covar <- solve( diag(k*l) + eta_Z_inter_transpose_eta_Z_inter / Sigma_xi[j, j] )
       mean <- covar %*% eta_Z_inter.T %*% ( xi[, j] -  eta %*% Ga[j, ] -  interactions[, j] ) / Sigma_xi[j, j]
       delta_j_star <- bayesSurv::rMVNorm(n = 1, mean = mean, Sigma = covar)
