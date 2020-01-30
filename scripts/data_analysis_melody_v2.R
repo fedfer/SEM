@@ -41,7 +41,7 @@ df_metals_log = df_metals_log %>%
 
 # Examine covariates ------------------
 summary(df_cov)
-df_cov <- df_cov %>% select(-c("DMDEDUC3", "DMDEDUC2", "DMDMARTL", "RIDEXPRG", "LBXAPB", "URXUAS", "URXUCL")) # remove covariates with too many missing values
+df_cov <- df_cov %>% dplyr::select(-c("DMDEDUC3", "DMDEDUC2", "DMDMARTL", "RIDEXPRG", "LBXAPB", "URXUAS", "URXUCL")) # remove covariates with too many missing values
 
 
 # Outcomes------------------------
