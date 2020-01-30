@@ -5,13 +5,13 @@ library(dplyr)
 library(mice)
 
 # load data--------------------------
-load(file = "data/nhanes_cov_1516.RData")
-load(file = "data/nhanes_out_1516.RData")
-load(file = "data/nhanes_metals_1516.RData")
-load(file = "data/nhanes_cov_simple_1516.RData")
+load(file = "/work/yj90/SEM/data/nhanes_cov_1516.RData")
+load(file = "/work/yj90/SEM/data/nhanes_out_1516.RData")
+load(file = "/work/yj90/SEM/data/nhanes_metals_1516.RData")
+load(file = "/work/yj90/SEM/data/nhanes_cov_simple_1516.RData")
 
 # source--------------------------
-source("scripts/gibbs_inter_cov_missing_v1.R")
+source("/work/yj90/SEM/scripts/gibbs_inter_cov_missing_v1.R")
 
 # # Log transform chemicals--------------------------
 # TODO: maybe we want to log transform some of the outcomes and some of the covariates

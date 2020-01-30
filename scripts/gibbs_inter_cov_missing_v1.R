@@ -13,7 +13,7 @@ library(truncnorm)
 library(matrixcalc)
 
 # Source custom functions------------------------------------------------------------
-source("scripts/functions_CUSP_updates.R")
+source("/work/yj90/SEM/scripts/functions_CUSP_updates.R")
 
 # Gibbs sampler--------------------------------------------------------
 gibbs <- function(X, Y, X_NA, Y_NA, X_LOD, LOD_X_vec, Z, nrun, burn, thin = 1, alpha_prior = NULL, theta_inf = 0.05,
