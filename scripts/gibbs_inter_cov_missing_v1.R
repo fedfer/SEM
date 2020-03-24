@@ -12,8 +12,11 @@ library(mvtnorm)
 library(truncnorm)
 library(matrixcalc)
 
-# Source custom functions------------------------------------------------------------
+# Source custom functions (for server) ------------------------------------------------------------
 source("/work/yj90/SEM/scripts/functions_CUSP_updates.R")
+
+# Source custom functions (local) ------------------------------------------------------------
+#source("scripts/functions_CUSP_updates.R")
 
 # Gibbs sampler--------------------------------------------------------
 gibbs <- function(X, Y, X_NA, Y_NA, X_LOD, LOD_X_vec, Z, nrun, burn, thin = 1, alpha_prior = NULL, theta_inf = 0.05,

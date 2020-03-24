@@ -20,6 +20,9 @@ load(file = "/work/yj90/SEM/data/nhanes_chem_1516.RData")
 
 # source (server)--------------------------
 source("/work/yj90/SEM/scripts/gibbs_inter_cov_missing_v1.R")
+ 
+# source (local)--------------------------
+# source("scripts/gibbs_inter_cov_missing_v1.R")
 
 
 # # Log transform chemicals--------------------------
@@ -31,108 +34,108 @@ df_chem_log = df_chem %>%
   mutate(SEQN = df_chem$SEQN) %>% #so we append new column named SEQN to the end of dataset
   dplyr::select(- "df_chem$SEQN") #and delete column with ugly name
 
-# Plot histogram metals--------------------------
-df_chem_log[,1:10] %>%
-  gather() %>% 
-  ggplot(aes(value)) +
-  facet_wrap(~ key, scales = "free") +
-  geom_histogram()
-
-df_chem_log[,11:20] %>%
-  gather() %>% 
-  ggplot(aes(value)) +
-  facet_wrap(~ key, scales = "free") +
-  geom_histogram()
-
-df_chem_log[,21:30] %>%
-  gather() %>% 
-  ggplot(aes(value)) +
-  facet_wrap(~ key, scales = "free") +
-  geom_histogram()
-
-df_chem_log[,31:40] %>%
-  gather() %>% 
-  ggplot(aes(value)) +
-  facet_wrap(~ key, scales = "free") +
-  geom_histogram()
-
-df_chem_log[,41:50] %>%
-  gather() %>% 
-  ggplot(aes(value)) +
-  facet_wrap(~ key, scales = "free") +
-  geom_histogram()
-
-df_chem_log[,51:60] %>%
-  gather() %>% 
-  ggplot(aes(value)) +
-  facet_wrap(~ key, scales = "free") +
-  geom_histogram()
-
-df_chem_log[,61:70] %>%
-  gather() %>% 
-  ggplot(aes(value)) +
-  facet_wrap(~ key, scales = "free") +
-  geom_histogram()
-
-df_chem_log[,71:80] %>%
-  gather() %>% 
-  ggplot(aes(value)) +
-  facet_wrap(~ key, scales = "free") +
-  geom_histogram()
-
-df_chem_log[,81:90] %>%
-  gather() %>% 
-  ggplot(aes(value)) +
-  facet_wrap(~ key, scales = "free") +
-  geom_histogram()
-
-df_chem_log[,91:100] %>%
-  gather() %>% 
-  ggplot(aes(value)) +
-  facet_wrap(~ key, scales = "free") +
-  geom_histogram()
-
-df_chem_log[,101:110] %>%
-  gather() %>% 
-  ggplot(aes(value)) +
-  facet_wrap(~ key, scales = "free") +
-  geom_histogram()
-
-df_chem_log[,111:120] %>%
-  gather() %>% 
-  ggplot(aes(value)) +
-  facet_wrap(~ key, scales = "free") +
-  geom_histogram()
-
-df_chem_log[,121:130] %>%
-  gather() %>% 
-  ggplot(aes(value)) +
-  facet_wrap(~ key, scales = "free") +
-  geom_histogram()
-
-df_chem_log[,131:140] %>%
-  gather() %>% 
-  ggplot(aes(value)) +
-  facet_wrap(~ key, scales = "free") +
-  geom_histogram()
-
-df_chem_log[,141:150] %>%
-  gather() %>% 
-  ggplot(aes(value)) +
-  facet_wrap(~ key, scales = "free") +
-  geom_histogram()
-
-df_chem_log[,151:160] %>%
-  gather() %>% 
-  ggplot(aes(value)) +
-  facet_wrap(~ key, scales = "free") +
-  geom_histogram()
-
-df_chem_log[,161:171] %>%
-  gather() %>% 
-  ggplot(aes(value)) +
-  facet_wrap(~ key, scales = "free") +
-  geom_histogram()
+# Plot histogram (comment out for server)--------------------------
+# df_chem_log[,1:10] %>%
+#   gather() %>% 
+#   ggplot(aes(value)) +
+#   facet_wrap(~ key, scales = "free") +
+#   geom_histogram()
+# 
+# df_chem_log[,11:20] %>%
+#   gather() %>% 
+#   ggplot(aes(value)) +
+#   facet_wrap(~ key, scales = "free") +
+#   geom_histogram()
+# 
+# df_chem_log[,21:30] %>%
+#   gather() %>% 
+#   ggplot(aes(value)) +
+#   facet_wrap(~ key, scales = "free") +
+#   geom_histogram()
+# 
+# df_chem_log[,31:40] %>%
+#   gather() %>% 
+#   ggplot(aes(value)) +
+#   facet_wrap(~ key, scales = "free") +
+#   geom_histogram()
+# 
+# df_chem_log[,41:50] %>%
+#   gather() %>% 
+#   ggplot(aes(value)) +
+#   facet_wrap(~ key, scales = "free") +
+#   geom_histogram()
+# 
+# df_chem_log[,51:60] %>%
+#   gather() %>% 
+#   ggplot(aes(value)) +
+#   facet_wrap(~ key, scales = "free") +
+#   geom_histogram()
+# 
+# df_chem_log[,61:70] %>%
+#   gather() %>% 
+#   ggplot(aes(value)) +
+#   facet_wrap(~ key, scales = "free") +
+#   geom_histogram()
+# 
+# df_chem_log[,71:80] %>%
+#   gather() %>% 
+#   ggplot(aes(value)) +
+#   facet_wrap(~ key, scales = "free") +
+#   geom_histogram()
+# 
+# df_chem_log[,81:90] %>%
+#   gather() %>% 
+#   ggplot(aes(value)) +
+#   facet_wrap(~ key, scales = "free") +
+#   geom_histogram()
+# 
+# df_chem_log[,91:100] %>%
+#   gather() %>% 
+#   ggplot(aes(value)) +
+#   facet_wrap(~ key, scales = "free") +
+#   geom_histogram()
+# 
+# df_chem_log[,101:110] %>%
+#   gather() %>% 
+#   ggplot(aes(value)) +
+#   facet_wrap(~ key, scales = "free") +
+#   geom_histogram()
+# 
+# df_chem_log[,111:120] %>%
+#   gather() %>% 
+#   ggplot(aes(value)) +
+#   facet_wrap(~ key, scales = "free") +
+#   geom_histogram()
+# 
+# df_chem_log[,121:130] %>%
+#   gather() %>% 
+#   ggplot(aes(value)) +
+#   facet_wrap(~ key, scales = "free") +
+#   geom_histogram()
+# 
+# df_chem_log[,131:140] %>%
+#   gather() %>% 
+#   ggplot(aes(value)) +
+#   facet_wrap(~ key, scales = "free") +
+#   geom_histogram()
+# 
+# df_chem_log[,141:150] %>%
+#   gather() %>% 
+#   ggplot(aes(value)) +
+#   facet_wrap(~ key, scales = "free") +
+#   geom_histogram()
+# 
+# df_chem_log[,151:160] %>%
+#   gather() %>% 
+#   ggplot(aes(value)) +
+#   facet_wrap(~ key, scales = "free") +
+#   geom_histogram()
+# 
+# df_chem_log[,161:171] %>%
+#   gather() %>% 
+#   ggplot(aes(value)) +
+#   facet_wrap(~ key, scales = "free") +
+#   geom_histogram()
 
 # Throw away explanatory variables that are not normally distributed (metal)--------------------------
 # variables thrown away: "LBXBCD", "LBXBCR", "LBXBGE", "LBXBGM", "LBXIHG", "LBXTHG", "URXUAB",
@@ -167,9 +170,8 @@ df_chem_log <- df_chem_log %>%
   dplyr::select(-c("LBXVVB", "LBXVXY", "URXBPM", "URXCYHA", "URXCYM", "URX1DC", "URX2DC", "URXDPM", "URXGAM", "URXIPM1", "URXIPM3", "URXMB1", "URXMB2", "URXPHE", "URXPMA", "URXTCV"))
 
 
-
 # Examine covariates ------------------
-summary(df_cov)
+# summary(df_cov)
 df_cov <- df_cov %>% dplyr::select(-c("DMDEDUC3", "DMDEDUC2", "DMDMARTL", "RIDEXPRG", "LBXAPB", "URXUAS", "URXUCL")) # remove covariates with too many missing values
 
 
@@ -177,12 +179,12 @@ df_cov <- df_cov %>% dplyr::select(-c("DMDEDUC3", "DMDEDUC2", "DMDMARTL", "RIDEX
 df_out_analysis = df_out %>% dplyr::select(SEQN,BPXSY1,BPXDI1,
                                            BMXWAIST,BMXBMI)
 
-# Plot histogram outcomes--------------------------
-df_out_analysis[,] %>%
-  gather() %>% 
-  ggplot(aes(value)) +
-  facet_wrap(~ key, scales = "free") +
-  geom_histogram()
+# Plot histogram outcomes (comment out during server deployment)--------------------------
+# df_out_analysis[,] %>%
+#   gather() %>% 
+#   ggplot(aes(value)) +
+#   facet_wrap(~ key, scales = "free") +
+#   geom_histogram()
 # BMXBMI looks a bit skewed, otherwise looks okay
 
 
@@ -203,8 +205,14 @@ imp <- complete(imp)
 # Split into Y, X, Z--------------------------
 Y <- df[, 1:4]
 Z <- imp[, 1:(1+ncol(df_cov)-1-1)]
+Z <- as.matrix(Z)
 X <- df[,(ncol(Y) + ncol(Z) + 1):ncol(df)]
 
+# Center Y and X ----
+X_scaled <- scale(X, scale = FALSE)
+Y_scaled <- scale(Y, scale = FALSE)
+X <- X_scaled
+Y <- Y_scaled
 
 # 0-1 matrices for missing values, entry is 1 if missing--------------------------
 Y_NA <- Y %>% is.na() * 1
@@ -264,7 +272,7 @@ X_hollow <- X_hollow - chem_lod_matrix_log_scale * (as.data.frame(X_hollow) %>% 
 
 # Sanity check: 0's in Y_hollow and X_hollow should conform to the 0-1 matrices ---------------------
 colSums(X_hollow == 0) - colSums( (X_LOD + X_NA) == 1)
-colSums(df == 0 & !is.na(df)) # Sanity check for X_hollow passed
+colSums(X == 0 & !is.na(X)) # Sanity check for X_hollow passed
 
 # how many latent factors?------------------------
 df_chem_imp <- imp[, (1+ncol(df_cov)-1):ncol(imp)]
@@ -273,8 +281,8 @@ cor_chem = df_chem_imp %>%
   cor(. ,use="complete.obs")
 eig_chem = cor_chem %>% eigen()
 plot(eig_chem$values)
-cumsum(eig_chem$values)/sum(eig_chem$values)
-
+vec <- cumsum(eig_chem$values)/sum(eig_chem$values)
+sum(vec > 0.9)
 
 cor(df_out_analysis, use="complete.obs")
 cor_out = df_out_analysis %>% 
@@ -282,7 +290,8 @@ cor_out = df_out_analysis %>%
   cor(. ,use="complete.obs") 
 eig_out = cor_out %>% eigen()
 plot(eig_out$values)
-cumsum(eig_out$values)/sum(eig_out$values)
+vec <- cumsum(eig_out$values)/sum(eig_out$values)
+sum(vec > 0.9)
 
 
 
@@ -293,7 +302,7 @@ n_samples = nrun - burn
 gibbs_result <- gibbs(X = X_hollow, Y = Y_hollow,
                       X_NA = X_NA, Y_NA = Y_NA, X_LOD = X_LOD, LOD_X_vec = LOD_X_vec, Z = Z,
                       nrun = nrun, burn = burn, thin = 1, alpha_prior = NULL, theta_inf = 0.05,
-                      k = 31, m = 3, a = 1/2, delta_rw = 0.1) # maybe startoff delta_rw as 0.05, acceptance rate high at first then became too low for 0.1
+                      k = 32, m = 2, a = 1/2, delta_rw = 0.1) # maybe startoff delta_rw as 0.05, acceptance rate high at first then became too low for 0.1
 
 results_dir="/work/yj90/SEM/"
 saveRDS(gibbs_result, file.path(results_dir, "gibbs_results.rds"))
