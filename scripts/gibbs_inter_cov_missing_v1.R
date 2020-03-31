@@ -204,7 +204,7 @@ gibbs <- function(X, Y, X_NA, Y_NA, X_LOD, LOD_X_vec, Z, nrun, burn, thin = 1,
       # Propose eta_star
       # eta_star <- bayesSurv::rMVNorm(n = 1, mean = rep(x = 0, times = k), Sigma = diag(rep(x = 1, times = k))) # Propose from a dumb proposal for now
       #eta_star <- bayesSurv::rMVNorm(1,eta[h,],diag(k)*delta_rw)
-      eta_star <- eta[h,] + sqrt(delta_rw)*diag(rnorm(k))
+      eta_star <- eta[h,] + sqrt(delta_rw)*rnorm(k)
       eta_star.T <- t(eta_star)     # avoid repeated transpose calls
       eta.T <- t(eta[h,]) # abuse notation, corrected after this metropolis update
       
