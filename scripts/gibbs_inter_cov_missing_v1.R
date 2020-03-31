@@ -179,7 +179,8 @@ gibbs <- function(X, Y, X_NA, Y_NA, X_LOD, LOD_X_vec, Z, nrun, burn, thin = 1,
       mean <- covar %*% ( Lambda_y.T %*% Phi.inv %*% Y[i, ] - Lambda_y.T %*% Phi.inv %*% alpha_mat %*% Z[i, ] +
                             Sigma_xi_inv %*% (Ga %*% eta[i, ] + apply(Omegas, c(1), etai_Omega_etai, etai = eta[i, ])  +
                                                 apply(Deltas, c(1), etai_Delta_zi, etai = eta[i, ], zi = Z[i, ]) ) )
-      xi[i, ] <- mean + covar_0.5* diag(rnorm(length(sig_xis)))
+      
+      xi[i, ] <- mean + covar_0.5 %*% rnorm(length(sig_xis))
         
     }
     xi.T <- t(xi)
