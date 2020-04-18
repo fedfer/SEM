@@ -55,11 +55,11 @@ eta = sample_eta(xi,n,eta,Ga, m, Sigma_xi_inv, Xi,
 microbenchmark(R = sample_eta(xi,n,eta,Ga, m, Sigma_xi_inv, X, Lambda_x, Psi_inv, X, Z),
                RcPP = sample_eta_rcpp(m, n, k, delta_rw, eta,xi,X, Z, Ga,Omegas,Deltas, Sigma_xi_inv,Lambda_x, Psi_inv, acp))
 
-
+L = sample_eta_rcpp(m, n, k, delta_rw, eta,xi,X, Z, Ga,Omegas,Deltas, Sigma_xi_inv,Lambda_x, Psi_inv, acp)
 
 # Check the speed up 
 library(microbenchmark)
-microbenchmark(R = mh_old(xi[i,],eta[i,],Ga, m, Sigma_xi_inv, X[i,],Lambda_x, Psi_inv,vec_Omega_eta,vec_Delta_eta),
+microbenchmark(R = mh_old(xi[i,], eta[i,],Ga, m, Sigma_xi_inv, X[i,],Lambda_x, Psi_inv,vec_Omega_eta,vec_Delta_eta),
                RcPP = mh(xi[i,], eta[i,],Ga,m, Sigma_xi_inv, X[i,],Lambda_x, Psi_inv,vec_Omega_eta, vec_Delta_eta))
 
 microbenchmark(R = sample_xi(n,m,Y,Z,eta,Lambda_y,Phi,Sigma_xi_inv, alpha_mat, Ga, Omegas, Deltas,sig_xis),

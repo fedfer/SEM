@@ -72,3 +72,24 @@ sample_eta = function(xi,n,eta,Ga, m, Sigma_xi_inv, Xi,
   }
   return(eta)
 }
+
+etai_Omega_etai <- function(Omega, etai){
+  return(t(etai) %*% Omega %*% etai)
+}
+
+etai_Delta_zi <- function(Delta, etai, zi){
+  return(t(etai) %*% Delta %*% zi)
+}
+
+etai_Delta_zi_one_mat <- function(Delta, etai_and_zi){
+  etai_and_zi <- as.matrix(etai_and_zi)
+  # print("dimension of etai_and_zi")
+  # print(dim(etai_and_zi))
+  # print("k equals")
+  # print(k)
+  # print("dimension of Delta")
+  # print(dim(Delta))
+  # print("ncol")
+  # print(ncol(etai_and_zi))
+  return(t(etai_and_zi[1:k]) %*% Delta %*% etai_and_zi[(k + 1):nrow(etai_and_zi)])
+}
