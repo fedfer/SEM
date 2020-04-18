@@ -13,7 +13,7 @@ library(truncnorm)
 library(matrixcalc)
 
 # Source custom functions (for server) ------------------------------------------------------------
-source("/work/yj90/SEM/scripts/functions_CUSP_updates.R")
+#source("/work/yj90/SEM/scripts/functions_CUSP_updates.R")
 
 # Source custom functions (local) ------------------------------------------------------------
 #source("scripts/functions_CUSP_updates.R")
@@ -42,12 +42,10 @@ gibbs <- function(X, Y, X_NA, Y_NA, X_LOD, LOD_X_vec, Z, nrun, burn, thin = 1,
   if(is.null(k)) k = floor(p/2)
   if(is.null(m)) m = floor(q/2)
   
-  
   as <- 1         # Factorization hyperparameters
   bs <- 0.3
   a_theta <- 2
   b_theta <- 2
-  
   
   eta <- matrix(rnorm(n*k),n,k)     # Initial values
   eta.T <- t(eta)
@@ -181,7 +179,7 @@ gibbs <- function(X, Y, X_NA, Y_NA, X_LOD, LOD_X_vec, Z, nrun, burn, thin = 1,
                                                 apply(Deltas, c(1), etai_Delta_zi, etai = eta[i, ], zi = Z[i, ]) ) )
       
       xi[i, ] <- mean + covar_0.5 %*% rnorm(length(sig_xis))
-        
+      
     }
     xi.T <- t(xi)
     
@@ -200,17 +198,14 @@ gibbs <- function(X, Y, X_NA, Y_NA, X_LOD, LOD_X_vec, Z, nrun, burn, thin = 1,
     # --- Update eta --- # # Added non-chem covariates
     # Update eta matrix by row using metropolis hastings
     Psi_inv = solve(Psi)
-    for (h in 1:n) {
+    for (h in 1:n) { 
       # Propose eta_star
-      # eta_star <- bayesSurv::rMVNorm(n = 1, mean = rep(x = 0, times = k), Sigma = diag(rep(x = 1, times = k))) # Propose from a dumb proposal for now
-      #eta_star <- bayesSurv::rMVNorm(1,eta[h,],diag(k)*delta_rw)
       eta_star <- eta[h,] + sqrt(delta_rw)*rnorm(k)
-      eta_star.T <- t(eta_star)     # avoid repeated transpose calls
-      eta.T <- t(eta[h,]) # abuse notation, corrected after this metropolis update
+      eta_star.T <- t(eta_star)     
+      eta.T <- t(eta[h,]) 
       
       # Compute log of ratio
-      
-      xi.T <- t(xi[h, ]) # abuse of notation, corrected after this metropolis update
+      xi.T <- t(xi[h, ])
       X.T <- t(X[h, ])
       
       vec_Omega_eta_star <- apply(Omegas, c(1), etai_Omega_etai, etai = eta_star)
@@ -222,11 +217,7 @@ gibbs <- function(X, Y, X_NA, Y_NA, X_LOD, LOD_X_vec, Z, nrun, burn, thin = 1,
       vec_Delta_eta_star.T <- t(vec_Delta_eta_star)
       vec_Delta_eta <- apply(Deltas, c(1), etai_Delta_zi, etai = eta[h, ], zi = Z[h, ])
       vec_Delta_eta.T <- t(vec_Delta_eta)
-      
-      # print(paste("iteration", s))
-      # print(is.diagonal.matrix(Psi))
-      # print(sum(diag(Psi)))
-      
+
       logr <- (xi.T - eta_star.T %*% Ga.T - vec_Omega_eta_star.T - vec_Delta_eta_star.T) %*% Sigma_xi_inv %*% 
         (xi[h, ] - Ga %*% eta_star - vec_Omega_eta_star - vec_Delta_eta_star) +
         (X.T - eta_star.T %*% Lambda_x.T) %*% Psi_inv %*% (X[h, ] - Lambda_x %*% eta_star) + 
@@ -252,9 +243,7 @@ gibbs <- function(X, Y, X_NA, Y_NA, X_LOD, LOD_X_vec, Z, nrun, burn, thin = 1,
     
     
     # --- DL Update for Lambda_y --- #
-    # With or without interaction terms, this stays the same.
-    # Added terms associated with covariates
-    
+
     Y_minus_cov <- Y - Z %*% alpha_mat.T
     
     # --- Update Lambda_y  --- #
@@ -277,7 +266,6 @@ gibbs <- function(X, Y, X_NA, Y_NA, X_LOD, LOD_X_vec, Z, nrun, burn, thin = 1,
     mujh = zetajh*matrix(rep(tau,m),q,m,byrow = F)/abs(Lambda_y)
     rhojh <- matrix(statmod::rinvgauss(m*q, mujh),q,m,byrow = T)
     
-    
     # --- Update tau --- #
     for(j in 1:q){
       tau[j] = GIGrvg::rgig(n=1,lambda = 1-m, psi = 1, 
@@ -296,8 +284,7 @@ gibbs <- function(X, Y, X_NA, Y_NA, X_LOD, LOD_X_vec, Z, nrun, burn, thin = 1,
     }
     
     
-    # --- CUSP update for Lambda_x --- # # remains unchanged
-    # With or without interaction terms, this stays the same
+    # --- CUSP update for Lambda_x --- # 
     # --- Update Lambda_x --- #
     Lambda_x <- CUSP_update_Lambda(Lambda = Lambda_x, X , eta, eta.T, k, p, theta, ps,
                                    omega_dir = C_dir, b_theta, a_theta, theta_inf, z_ind, P_z,
@@ -372,20 +359,6 @@ gibbs <- function(X, Y, X_NA, Y_NA, X_LOD, LOD_X_vec, Z, nrun, burn, thin = 1,
     }))
     # Update each Delta_j one by one
     for (j in 1:m) {
-      # print("update deltas iteration")
-      # print(j)
-      # print("dimension of eta_Z_inter_transpose_eta_Z_inter")
-      # print(dim(eta_Z_inter_transpose_eta_Z_inter))
-      # print("dimension of eta_Z_inter")
-      # print(dim(eta_Z_inter))
-      # print("dimension of eta")
-      # print(dim(eta))
-      # print("dimension of Z")
-      # print(dim(Z))
-      # print("k")
-      # print(k)
-      # print("l")
-      # print(l)
       covar <- solve( diag(k*l) + eta_Z_inter_transpose_eta_Z_inter / Sigma_xi[j, j] )
       mean <- covar %*% eta_Z_inter.T %*% ( xi[, j] -  eta %*% Ga[j, ] -  interactions[, j] ) / Sigma_xi[j, j]
       delta_j_star <- bayesSurv::rMVNorm(n = 1, mean = mean, Sigma = covar)
@@ -395,16 +368,6 @@ gibbs <- function(X, Y, X_NA, Y_NA, X_LOD, LOD_X_vec, Z, nrun, burn, thin = 1,
     #######################
     # Sample missing data #
     #######################
-    # Sample X_NA
-    # Test
-    # X_NA <- cbind(c(1, 1, 0), c(1, 1, 0), c(0,0,0))
-    # Psi <- diag(rep(x = 1, times = ncol(X_NA)))
-    # Lambda_x <- matrix(0,ncol(X_NA),3)
-    # eta <- matrix(rnorm(ncol(X_NA)*3),ncol(X_NA),3)
-    # for (i in 1:nrow(X_NA)) {
-    #   covar_NA <- Psi %*% diag(X_NA[i, ])
-    #   X_NA[i, ] <- bayesSurv::rMVNorm(n = 1, mean = Lambda_x %*% eta[i, ], Sigma = covar_NA)
-    # }
     for (i in 1:nrow(X_NA)) {
       for(c in 1:ncol(X_NA)){
         if(X_NA[i, c] != 0){
@@ -497,6 +460,6 @@ gibbs <- function(X, Y, X_NA, Y_NA, X_LOD, LOD_X_vec, Z, nrun, burn, thin = 1,
               acp = acp/(nrun-burn),
               inter_coeff_st = inter_coeff_st,
               inter_cov_coeff_st = inter_cov_coeff_st
-              ))
+  ))
   
 }
