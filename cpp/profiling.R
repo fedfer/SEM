@@ -22,6 +22,7 @@ library(tidyverse)
 # - mh (> 4x speed up) 
 # - sample_eta_rcpp (> 20x speed up) can use some more tests
 # - sample_Lambday_rcpp (> 4x speed up) 
+# - X_na to be fixed, typo for sqrt
 
 # generate data and paraters
 n = 500; m = 15; k = 10; l = 20; q = 5; p = 25
