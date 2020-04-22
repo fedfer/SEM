@@ -21,7 +21,7 @@ library(tidyverse)
 # - sample_xi_rcpp (> 20x speed up) can use some more tests
 # - mh (> 4x speed up) 
 # - sample_eta_rcpp (> 20x speed up) can use some more tests
-
+# - sample_Lambday_rcpp (> 4x speed up) 
 
 # generate data and paraters
 n = 500; m = 15; k = 10; l = 20; q = 5; p = 25
@@ -40,25 +40,31 @@ Lambda_x <- matrix(rnorm(p*k),p,k)
 Ga <- matrix(rnorm(m*k), m, k)
 xi <- matrix(rnorm(n*m), n, m)
 acp = numeric(n); delta_rw =  1
+Plam = matrix(1,q,m)
+
 
 
 vec_Omega_eta = apply_rcpp_Omegas(Omegas,eta[i,],m);
 vec_Delta_eta = apply_rcpp_Deltas(Deltas,eta[i,],Z[i,],m);
 sourceCpp("./cpp/functions.cpp")
+sample_Lambday_rcpp(xi, Plam, phis, m, q, Y)
 
-L = sample_eta_rcpp(xi,eta,Ga, m, Sigma_xi_inv, Xi,
-               Lambda_x, Psi_inv, X, Z)
 source("./cpp/Sampler_bits_old.R")
-eta = sample_eta(xi,n,eta,Ga, m, Sigma_xi_inv, Xi,
-                      Lambda_x, Psi_inv, X, Z)
+sample_Lambday(xi, m, q, Plam, phis,Y)
+
+
+
+
+
+
+# Check the speed up 
+library(microbenchmark)
+microbenchmark(R = sample_Lambday(xi, m, q, Plam, phis,Y),
+               RcPP = sample_Lambday_rcpp(xi, Plam, phis, m, q, Y))
 
 microbenchmark(R = sample_eta(xi,n,eta,Ga, m, Sigma_xi_inv, X, Lambda_x, Psi_inv, X, Z),
                RcPP = sample_eta_rcpp(m, n, k, delta_rw, eta,xi,X, Z, Ga,Omegas,Deltas, Sigma_xi_inv,Lambda_x, Psi_inv, acp))
 
-L = sample_eta_rcpp(m, n, k, delta_rw, eta,xi,X, Z, Ga,Omegas,Deltas, Sigma_xi_inv,Lambda_x, Psi_inv, acp)
-
-# Check the speed up 
-library(microbenchmark)
 microbenchmark(R = mh_old(xi[i,], eta[i,],Ga, m, Sigma_xi_inv, X[i,],Lambda_x, Psi_inv,vec_Omega_eta,vec_Delta_eta),
                RcPP = mh(xi[i,], eta[i,],Ga,m, Sigma_xi_inv, X[i,],Lambda_x, Psi_inv,vec_Omega_eta, vec_Delta_eta))
 
@@ -84,5 +90,18 @@ for(s in 1:S){
 mean_xi_cpp = apply(xi_cpp, c(2,3), mean)
 mean_xi = apply(xi, c(2,3), mean)
 abs(mean_xi - mean_xi_cpp) %>% mean()
+
+# LambdaY
+S = 2000 # put it equal to 500 at least 
+Lambda_cpp = array(0, c(S, q, m))
+Lambda = array(0, c(S, q, m))
+for(s in 1:S){
+  Lambda_cpp[s,,] = sample_Lambday_rcpp(xi, Plam, phis, m, q, Y)
+  Lambda[s,,] = sample_Lambday(xi, m, q, Plam, phis,Y)
+}
+
+mean_cpp = apply(Lambda_cpp, c(2,3), mean)
+mean_old = apply(Lambda, c(2,3), mean)
+abs(mean_old - mean_cpp) %>% mean()
 
 

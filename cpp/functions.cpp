@@ -124,3 +124,39 @@ List sample_eta_rcpp(int m, int n, int k, double delta_rw,
   ret["acp"] = acp;
   return ret;
 }
+
+// [[Rcpp::export]]
+Rcpp::NumericMatrix sample_Lambday_rcpp(arma::mat xi, arma::mat Plam, 
+                                   arma::vec phis, int m, int q, 
+                                   arma::mat Y){
+  // --- UPDATE lambda --- //
+  arma::mat lambda(q, m);
+  arma::mat xi2 = xi.t() * xi;    // prepare eta crossproduct before the loop
+  for(int j=0; j < q; ++j) {
+    arma::mat Llamt = trimatu(chol(diagmat(Plam.row(j)) + phis(j)*xi2));
+    arma::mat Llam = trimatl(Llamt.t());
+    lambda.row(j) = (solve(Llamt, randn<arma::vec>(m)) +
+      solve(Llamt, solve(Llam, phis(j) * xi.t() * Y.col(j)))).t();
+  }
+  return Rcpp::wrap(lambda);
+}
+
+
+// [[Rcpp::export]]
+Rcpp::NumericMatrix sample_Xna_rcpp(int n, int p, Rcpp::NumericMatrix X_na, 
+                          arma::mat Lambda_x, arma::mat eta,
+                          arma::mat Psi){
+  
+  
+  for(int i=0;i<n;++i){
+    for(int j=0;j<p;++j){
+      if(X_na(i,j) != 0){
+        arma::vec noise = randn<arma::vec>(1);
+        arma::mat sample = eta.row(i).t() * Lambda_x.row(j) + sqrt(noise) * Psi(j, j);
+        X_na(i,j) = sample(0,0);
+      }
+    }
+  }
+  return(X_na);
+}
+

@@ -93,3 +93,32 @@ etai_Delta_zi_one_mat <- function(Delta, etai_and_zi){
   # print(ncol(etai_and_zi))
   return(t(etai_and_zi[1:k]) %*% Delta %*% etai_and_zi[(k + 1):nrow(etai_and_zi)])
 }
+
+sample_Lambday = function(xi, m, q, Plam, phis,Y_minus_cov){
+  xi2 <- t(xi) %*% xi
+  zlams = rnorm(m*q)       # generate normal draws all at once
+  Lambda_y <- matrix(0, q, m)
+    
+  for(j in 1:q) {
+    Llamt = chol(diag(Plam[j,]) + phis[j]*xi2)
+    Lambda_y[j,] = t(solve(Llamt,
+                           zlams[1:m + (j-1)*m]) + 
+                       solve(Llamt,
+                             solve(t(Llamt),
+                                   phis[j] * t(xi) %*% Y_minus_cov[,j])))
+  }
+  return(Lambda_y)
+}
+
+sample_Xna = function(X_NA, Lambda_x, eta, Psi){
+  
+  for (i in 1:nrow(X_NA)) {
+    for(c in 1:ncol(X_NA)){
+      if(X_NA[i, c] != 0){
+        X_NA[i, c] <- rnorm(n = 1, mean = Lambda_x[c, ] %*% eta[i, ], sd = sqrt(Psi[c, c])) # no log transform here right
+      }
+    }
+  }
+  
+  return(X_NA)
+}

@@ -368,6 +368,7 @@ gibbs <- function(X, Y, X_NA, Y_NA, X_LOD, LOD_X_vec, Z, nrun, burn, thin = 1,
     #######################
     # Sample missing data #
     #######################
+    # Sample X_na
     for (i in 1:nrow(X_NA)) {
       for(c in 1:ncol(X_NA)){
         if(X_NA[i, c] != 0){
