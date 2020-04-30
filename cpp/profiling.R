@@ -2,6 +2,7 @@
 library(Rcpp)
 library(RcppArmadillo)
 library(tidyverse)
+library(microbenchmark)
 
 # To do: 
 # - etai_Delta_zi_one_mat, something like that once I understand what it is
@@ -22,9 +23,10 @@ library(tidyverse)
 # - mh (> 4x speed up) 
 # - sample_eta_rcpp (> 20x speed up) can use some more tests
 # - sample_Lambday_rcpp (> 4x speed up) 
-# - X_na to be fixed, typo for sqrt
+# - sample_Xna_rcpp (>10x speed up)
+# - sample_Xlod_rcpp (>10x speed up)
 
-# generate data and paraters
+# generate data and parameters
 n = 500; m = 15; k = 10; l = 20; q = 5; p = 25
 Omegas <- array(data = rnorm(m*k^2), c(m, k, k))
 Deltas <- array(data = rnorm(m*k*l), c(m, k, l))
@@ -42,6 +44,15 @@ Ga <- matrix(rnorm(m*k), m, k)
 xi <- matrix(rnorm(n*m), n, m)
 acp = numeric(n); delta_rw =  1
 Plam = matrix(1,q,m)
+ind = sample(1:length(X), 1000)
+X_na = X; X_na[ind] = 0 
+LOD_X_vec = rep(1, p)
+X_lod = X; X_lod[ind] = 0 
+c = 1;  i = 1
+
+sourceCpp("./cpp/sample_na.cpp")
+microbenchmark(R = sample_Xlod(X_lod, LOD_X_vec, Lambda_x, eta, Psi),
+               RcPP = sample_Xlod_rcpp(n,p, a = -Inf, X_lod, Lambda_x, eta, Psi, rep(0,p)))
 
 
 
@@ -53,29 +64,10 @@ sample_Lambday_rcpp(xi, Plam, phis, m, q, Y)
 source("./cpp/Sampler_bits_old.R")
 sample_Lambday(xi, m, q, Plam, phis,Y)
 
-
-
-# // [[Rcpp::export]]
-# // Rcpp::NumericMatrix sample_Xna_rcpp(int n, int p, Rcpp::NumericMatrix X_na, 
-#                                        //                           arma::mat Lambda_x, arma::mat eta,
-#                                        //                           arma::mat Psi){
-#   //   
-#     //   
-#     //   for(int i=0;i<n;++i){
-#       //     for(int j=0;j<p;++j){
-#         //       if(X_na(i,j) != 0){
-#           //         arma::vec noise = randn<arma::vec>(1);
-#           //         arma::mat sample = eta.row(i).t() * Lambda_x.row(j) + noise * sqrt(Psi(j, j));
-#           //         X_na(i,j) = sample(0,0);
-#           //       }
-#         //     }
-#       //   }
-#   //   return(X_na);
-#   // }
-
-
 # Check the speed up 
-library(microbenchmark)
+microbenchmark(R = sample_Xna(X_na, Lambda_x, eta, Psi),
+               RcPP = sample_Xna_rcpp(n,p, X_na, Lambda_x, eta, Psi))
+
 microbenchmark(R = sample_Lambday(xi, m, q, Plam, phis,Y),
                RcPP = sample_Lambday_rcpp(xi, Plam, phis, m, q, Y))
 
