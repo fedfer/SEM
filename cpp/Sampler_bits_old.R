@@ -122,3 +122,20 @@ sample_Xna = function(X_NA, Lambda_x, eta, Psi){
   
   return(X_NA)
 }
+
+sample_Xlod = function(X_LOD, LOD_X_vec, Lambda_x, eta, Psi){
+  
+  for (i in 1:nrow(X_LOD)) {
+    for(c in 1:ncol(X_LOD)){
+      if(X_LOD[i,c] != 0){
+        X_LOD[i, c] <- truncnorm::rtruncnorm(n = 1, a = -Inf, b = LOD_X_vec[c], 
+                                             mean = Lambda_x[c, ] %*% eta[i, ], 
+                                             sd = sqrt(Psi[c, c]) )
+      }
+    }
+  }
+  
+  return(X_LOD)
+}
+
+
