@@ -22,7 +22,7 @@ load(file = "/work/yj90/SEM/data/nhanes_chem_1516.RData")
 source("/work/yj90/SEM/scripts/gibbs_inter_cov_missing_v1.R")
  
 # source (local)--------------------------
-source("scripts/gibbs_inter_cov_missing_v1.R")
+#source("scripts/gibbs_inter_cov_missing_v1.R")
 
 
 # # Log transform chemicals--------------------------

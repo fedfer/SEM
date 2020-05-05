@@ -11,12 +11,15 @@ library(GIGrvg)
 library(mvtnorm)
 library(truncnorm)
 library(matrixcalc)
+library(Rcpp)
+library(RcppArmadillo)
 
 # Source custom functions (for server) ------------------------------------------------------------
 # source("/work/yj90/SEM/scripts/functions_CUSP_updates.R")
 
 # Source custom functions (local) ------------------------------------------------------------
 source("scripts/functions_CUSP_updates.R")
+sourceCpp("./cpp/functions.cpp")
 
 # Gibbs sampler--------------------------------------------------------
 gibbs <- function(X, Y, X_NA, Y_NA, X_LOD, LOD_X_vec, Z, nrun, burn, thin = 1, 
