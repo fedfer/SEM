@@ -3,26 +3,27 @@ library(tidyverse)
 library(plyr)
 library(dplyr)
 library(mice)
+library(Rcpp)
+library(RcppArmadillo)
 
 # load data (for server)--------------------------
 load(file = "/work/yj90/SEM/data/nhanes_cov_1516.RData")
 load(file = "/work/yj90/SEM/data/nhanes_out_1516.RData")
-#load(file = "/work/yj90/SEM/data/nhanes_metals_1516.RData")
-#load(file = "/work/yj90/SEM/data/nhanes_cov_simple_1516.RData")
 load(file = "/work/yj90/SEM/data/nhanes_chem_1516.RData")
 
 # load data (local)--------------------------
 # load(file = "data/nhanes_cov_1516.RData")
 # load(file = "data/nhanes_out_1516.RData")
-# load(file = "data/nhanes_metals_1516.RData")
-#load(file = "/work/yj90/SEM/data/nhanes_cov_simple_1516.RData")
 # load(file = "data/nhanes_chem_1516.RData")
 
 # source (server)--------------------------
-source("/work/yj90/SEM/scripts/gibbs_inter_cov_missing_v1.R")
+# source("/work/yj90/SEM/scripts/gibbs_inter_cov_missing_v1.R")
+source("/work/yj90/SEM/scripts/gibbs_cpp.R")
  
 # source (local)--------------------------
 # source("scripts/gibbs_inter_cov_missing_v1.R")
+# source("scripts/gibbs_cpp.R")
+
 
 
 # # Log transform chemicals--------------------------
@@ -296,8 +297,8 @@ sum(vec > 0.9)
 
 
 # Gibbs ------------------------------------------
-nrun = 5000
-burn = 4000
+nrun = 5
+burn = 4
 n_samples = nrun - burn
 gibbs_result <- gibbs(X = X_hollow, Y = Y_hollow,
                       X_NA = X_NA, Y_NA = Y_NA, X_LOD = X_LOD, LOD_X_vec = LOD_X_vec, Z = Z,

@@ -55,10 +55,14 @@ sourceCpp("./cpp/sample_na.cpp")
 microbenchmark(R = sample_Xlod(X_lod, LOD_X_vec, Lambda_x, eta, Psi),
                RcPP = sample_Xlod_rcpp(n,p, a = -Inf, X_lod, Lambda_x, eta, Psi, rep(0,p)))
 
+<<<<<<< HEAD
 # devtools::install_github("adzemski/rtnorm")
 # https://discourse.mc-stan.org/t/dealing-with-catalina-ii/11802/42
 # library(rtnorm)
 
+=======
+i <- 1
+>>>>>>> 3d6552b2e48ff2189066765bd11fac03459dbba4
 
 vec_Omega_eta = apply_rcpp_Omegas(Omegas,eta[i,],m);
 vec_Delta_eta = apply_rcpp_Deltas(Deltas,eta[i,],Z[i,],m);
@@ -67,6 +71,28 @@ sample_Lambday_rcpp(xi, Plam, phis, m, q, Y)
 
 source("./cpp/Sampler_bits_old.R")
 sample_Lambday(xi, m, q, Plam, phis,Y)
+
+
+
+# // [[Rcpp::export]]
+# // Rcpp::NumericMatrix sample_Xna_rcpp(int n, int p, Rcpp::NumericMatrix X_na, 
+#                                        //                           arma::mat Lambda_x, arma::mat eta,
+#                                        //                           arma::mat Psi){
+#   //   
+#     //   
+#     //   for(int i=0;i<n;++i){
+#       //     for(int j=0;j<p;++j){
+#         //       if(X_na(i,j) != 0){
+#           //         arma::vec noise = randn<arma::vec>(1);
+#           //         arma::mat sample = eta.row(i).t() * Lambda_x.row(j) + noise * sqrt(Psi(j, j));
+#           //         X_na(i,j) = sample(0,0);
+#           //       }
+#         //     }
+#       //   }
+#   //   return(X_na);
+#   // }
+
+
 
 # Check the speed up 
 microbenchmark(R = sample_Xna(X_na, Lambda_x, eta, Psi),
@@ -116,5 +142,10 @@ for(s in 1:S){
 mean_cpp = apply(Lambda_cpp, c(2,3), mean)
 mean_old = apply(Lambda, c(2,3), mean)
 abs(mean_old - mean_cpp) %>% mean()
+
+# xi
+
+# eta
+ret <- sample_eta_rcpp(m, n, k, delta_rw, eta,xi,X, Z, Ga,Omegas,Deltas, Sigma_xi_inv,Lambda_x, Psi_inv, acp)
 
 
