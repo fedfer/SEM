@@ -9,8 +9,6 @@ library(RcppArmadillo)
 # load data (for server)--------------------------
 load(file = "/work/yj90/SEM/data/nhanes_cov_1516.RData")
 load(file = "/work/yj90/SEM/data/nhanes_out_1516.RData")
-#load(file = "/work/yj90/SEM/data/nhanes_metals_1516.RData")
-#load(file = "/work/yj90/SEM/data/nhanes_cov_simple_1516.RData")
 load(file = "/work/yj90/SEM/data/nhanes_chem_1516.RData")
 
 # load data (local)--------------------------
@@ -19,10 +17,13 @@ load(file = "/work/yj90/SEM/data/nhanes_chem_1516.RData")
 # load(file = "data/nhanes_chem_1516.RData")
 
 # source (server)--------------------------
-source("/work/yj90/SEM/scripts/gibbs_inter_cov_missing_v1.R")
+# source("/work/yj90/SEM/scripts/gibbs_inter_cov_missing_v1.R")
+source("/work/yj90/SEM/scripts/gibbs_cpp.R")
  
 # source (local)--------------------------
-#source("scripts/gibbs_inter_cov_missing_v1.R")
+# source("scripts/gibbs_inter_cov_missing_v1.R")
+# source("scripts/gibbs_cpp.R")
+
 
 
 # # Log transform chemicals--------------------------

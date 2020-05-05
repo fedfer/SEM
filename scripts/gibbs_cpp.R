@@ -20,6 +20,7 @@ library(RcppArmadillo)
 # Source custom functions (local) ------------------------------------------------------------
 source("scripts/functions_CUSP_updates.R")
 sourceCpp("./cpp/functions.cpp")
+sourceCpp("./cpp/sample_na.cpp")
 
 # Gibbs sampler--------------------------------------------------------
 gibbs <- function(X, Y, X_NA, Y_NA, X_LOD, LOD_X_vec, Z, nrun, burn, thin = 1, 
@@ -112,13 +113,13 @@ gibbs <- function(X, Y, X_NA, Y_NA, X_LOD, LOD_X_vec, Z, nrun, burn, thin = 1,
   count <- 1 # sample timing
   
   # helper function
-  etai_Omega_etai <- function(Omega, etai){
-    return(t(etai) %*% Omega %*% etai)
-  }
+  # etai_Omega_etai <- function(Omega, etai){
+  #   return(t(etai) %*% Omega %*% etai)
+  # }
   
-  etai_Delta_zi <- function(Delta, etai, zi){
-    return(t(etai) %*% Delta %*% zi)
-  }
+  # etai_Delta_zi <- function(Delta, etai, zi){
+  #   return(t(etai) %*% Delta %*% zi)
+  # }
   
   etai_Delta_zi_one_mat <- function(Delta, etai_and_zi){
     etai_and_zi <- as.matrix(etai_and_zi)
@@ -160,11 +161,11 @@ gibbs <- function(X, Y, X_NA, Y_NA, X_LOD, LOD_X_vec, Z, nrun, burn, thin = 1,
     
     # --- Update Sigma_xi ---# #Added non-chem covariates
     interactions <- t(apply(eta, c(1), function(eta_i){
-      apply(Omegas, c(1), etai_Omega_etai, etai = eta_i)
+      apply(Omegas, c(1), etai_Omega_etai_rcpp, etai = eta_i)
     }))
     tmp <- cbind(eta, Z)
     inter_chem_cov <- t(apply(tmp, c(1), function(tmp_i){
-      apply(Deltas, c(1), etai_Delta_zi, etai = tmp_i[1:ncol(eta)], 
+      apply(Deltas, c(1), etai_Delta_zi_rcpp, etai = tmp_i[1:ncol(eta)], 
             zi = tmp_i[(ncol(eta) + 1):ncol(tmp)])
     }))
     xi_til <- xi - eta %*% Ga.T - interactions - inter_chem_cov
@@ -173,19 +174,8 @@ gibbs <- function(X, Y, X_NA, Y_NA, X_LOD, LOD_X_vec, Z, nrun, burn, thin = 1,
     Sigma_xi <- diag(1/sig_xis)
     Sigma_xi_inv <- diag(sig_xis) 
     
-    # --- Update xi --- # #Added non-chem covariates
-    covar <- solve(Lambda_y.T %*% solve(Phi) %*% Lambda_y + Sigma_xi_inv)
-    eig_covar = eigen(covar)
-    covar_0.5 = eig_covar$vectors %*% diag(eig_covar$values %>% sqrt())
-    for (i in 1:n) {
-      # update xi matrix by row, without interaction terms
-      mean <- covar %*% ( Lambda_y.T %*% Phi.inv %*% Y[i, ] - Lambda_y.T %*% Phi.inv %*% alpha_mat %*% Z[i, ] +
-                            Sigma_xi_inv %*% (Ga %*% eta[i, ] + apply(Omegas, c(1), etai_Omega_etai, etai = eta[i, ])  +
-                                                apply(Deltas, c(1), etai_Delta_zi, etai = eta[i, ], zi = Z[i, ]) ) )
-      
-      xi[i, ] <- mean + covar_0.5 %*% rnorm(length(sig_xis))
-      
-    }
+    # --- Update xi --- #
+    xi <- sample_xi_rcpp(n,m,Y,Z,eta,Lambda_y,Phi,Sigma_xi_inv, alpha_mat, Ga, Omegas, Deltas)
     xi.T <- t(xi)
     
     # --- Update Gamma --- #  # Added non-chem covariates
@@ -194,60 +184,18 @@ gibbs <- function(X, Y, X_NA, Y_NA, X_LOD, LOD_X_vec, Z, nrun, burn, thin = 1,
     for (j in 1:m) {
       # update Gamma by row
       covar <- solve(diag(k) + (1/Sigma_xi[j, j]) * eta2)
-      mean <- covar %*% ( (1/Sigma_xi[j, j]) * (eta.T %*%  xi[ , j] - eta.T %*% apply(eta, c(1), etai_Omega_etai, Omega = Omegas[j,,]) -
+      mean <- covar %*% ( (1/Sigma_xi[j, j]) * (eta.T %*%  xi[ , j] - eta.T %*% apply(eta, c(1), etai_Omega_etai_rcpp, Omega = Omegas[j,,]) -
                                                   eta.T %*%  apply(tmp, c(1), etai_Delta_zi_one_mat, Delta = Deltas[j,,] )) )
       Ga[j, ] <- bayesSurv::rMVNorm(n = 1, mean = mean, Sigma = covar) 
     }
     Ga.T <- t(Ga) # update transpose of Gamma
     
-    # --- Update eta --- # # Added non-chem covariates
+    # --- Update eta --- #
     # Update eta matrix by row using metropolis hastings
     Psi_inv = solve(Psi)
-    for (h in 1:n) {
-      # Propose eta_star
-      # eta_star <- bayesSurv::rMVNorm(n = 1, mean = rep(x = 0, times = k), Sigma = diag(rep(x = 1, times = k))) # Propose from a dumb proposal for now
-      #eta_star <- bayesSurv::rMVNorm(1,eta[h,],diag(k)*delta_rw)
-      eta_star <- eta[h,] + sqrt(delta_rw)*rnorm(k)
-      eta_star.T <- t(eta_star)     # avoid repeated transpose calls
-      eta.T <- t(eta[h,]) # abuse notation, corrected after this metropolis update
-      
-      # Compute log of ratio
-      
-      xi.T <- t(xi[h, ]) # abuse of notation, corrected after this metropolis update
-      X.T <- t(X[h, ])
-      
-      vec_Omega_eta_star <- apply(Omegas, c(1), etai_Omega_etai, etai = eta_star)
-      vec_Omega_eta_star.T <- t(vec_Omega_eta_star)
-      vec_Omega_eta <- apply(Omegas, c(1), etai_Omega_etai, etai = eta[h, ])
-      vec_Omega_eta.T <- t(vec_Omega_eta)
-      
-      vec_Delta_eta_star <- apply(Deltas, c(1), etai_Delta_zi, etai = eta_star, zi = Z[h, ])
-      vec_Delta_eta_star.T <- t(vec_Delta_eta_star)
-      vec_Delta_eta <- apply(Deltas, c(1), etai_Delta_zi, etai = eta[h, ], zi = Z[h, ])
-      vec_Delta_eta.T <- t(vec_Delta_eta)
-      
-      # print(paste("iteration", s))
-      # print(is.diagonal.matrix(Psi))
-      # print(sum(diag(Psi)))
-      
-      logr <- (xi.T - eta_star.T %*% Ga.T - vec_Omega_eta_star.T - vec_Delta_eta_star.T) %*% Sigma_xi_inv %*% 
-        (xi[h, ] - Ga %*% eta_star - vec_Omega_eta_star - vec_Delta_eta_star) +
-        (X.T - eta_star.T %*% Lambda_x.T) %*% Psi_inv %*% (X[h, ] - Lambda_x %*% eta_star) + 
-        eta_star.T %*% eta_star -
-        (xi.T - eta.T %*% Ga.T - vec_Omega_eta.T - vec_Delta_eta.T) %*% Sigma_xi_inv %*% 
-        (xi[h, ] - Ga %*% eta[h, ] - vec_Omega_eta - vec_Delta_eta) -
-        (X.T - eta.T %*% Lambda_x.T) %*% Psi_inv %*% (X[h, ] - Lambda_x %*% eta[h, ]) -
-        eta.T %*% eta[h, ]
-      logr <- logr *(-0.5)
-      
-      logu = log(runif(1))
-      
-      if (logr > logu){
-        eta[h,] = eta_star
-        acp[h] = acp[h] + 1
-      }
-      
-    }
+    
+    ret <- sample_eta_rcpp(m, n, k, delta_rw, eta,xi,X, Z, Ga,Omegas,Deltas, Sigma_xi_inv,Lambda_x, Psi_inv, acp)
+    eta <- ret$eta
     
     eta.T <- t(eta)
     xi.T <- t(xi)
@@ -262,17 +210,8 @@ gibbs <- function(X, Y, X_NA, Y_NA, X_LOD, LOD_X_vec, Z, nrun, burn, thin = 1,
     
     # --- Update Lambda_y  --- #
     Plam = rhojh*(zetajh^2)*matrix(rep(tau^2,m),q,m,byrow=F)
-    xi2 <- xi.T %*% xi
-    zlams = rnorm(m*q)       # generate normal draws all at once
     
-    for(j in 1:q) {
-      Llamt = chol(diag(Plam[j,]) + phis[j]*xi2)
-      Lambda_y[j,] = t(solve(Llamt,
-                             zlams[1:m + (j-1)*m]) + 
-                         solve(Llamt,
-                               solve(t(Llamt),
-                                     phis[j] * xi.T %*% Y_minus_cov[,j])))
-    }
+    Lambda_y <- sample_Lambday_rcpp(xi, Plam, phis, m, q, Y)
     
     Lambda_y.T = t(Lambda_y)
     
@@ -335,7 +274,7 @@ gibbs <- function(X, Y, X_NA, Y_NA, X_LOD, LOD_X_vec, Z, nrun, burn, thin = 1,
     eta_inter.T <- t(eta_inter) # avoid repeated transpose calls
     tmp <- cbind(eta, Z)
     inter_chem_cov <- t(apply(tmp, c(1), function(tmp_i){
-      apply(Deltas, c(1), etai_Delta_zi, etai = tmp_i[1:ncol(eta)], zi = tmp_i[(ncol(eta) + 1):ncol(tmp)])
+      apply(Deltas, c(1), etai_Delta_zi_rcpp, etai = tmp_i[1:ncol(eta)], zi = tmp_i[(ncol(eta) + 1):ncol(tmp)])
     }))
     # Update each Omega_j one by one
     
@@ -371,7 +310,7 @@ gibbs <- function(X, Y, X_NA, Y_NA, X_LOD, LOD_X_vec, Z, nrun, burn, thin = 1,
     eta_Z_inter.T <- t(eta_Z_inter) #avoid repeated transpose calls
     eta_Z_inter_transpose_eta_Z_inter <- eta_Z_inter.T %*% eta_Z_inter # avoid repeated calls
     interactions <- t(apply(eta, c(1), function(eta_i){
-      apply(Omegas, c(1), etai_Omega_etai, etai = eta_i)
+      apply(Omegas, c(1), etai_Omega_etai_rcpp, etai = eta_i)
     }))
     # Update each Delta_j one by one
     for (j in 1:m) {
@@ -399,22 +338,7 @@ gibbs <- function(X, Y, X_NA, Y_NA, X_LOD, LOD_X_vec, Z, nrun, burn, thin = 1,
     # Sample missing data #
     #######################
     # Sample X_NA
-    # Test
-    # X_NA <- cbind(c(1, 1, 0), c(1, 1, 0), c(0,0,0))
-    # Psi <- diag(rep(x = 1, times = ncol(X_NA)))
-    # Lambda_x <- matrix(0,ncol(X_NA),3)
-    # eta <- matrix(rnorm(ncol(X_NA)*3),ncol(X_NA),3)
-    # for (i in 1:nrow(X_NA)) {
-    #   covar_NA <- Psi %*% diag(X_NA[i, ])
-    #   X_NA[i, ] <- bayesSurv::rMVNorm(n = 1, mean = Lambda_x %*% eta[i, ], Sigma = covar_NA)
-    # }
-    for (i in 1:nrow(X_NA)) {
-      for(c in 1:ncol(X_NA)){
-        if(X_NA[i, c] != 0){
-          X_NA[i, c] <- rnorm(n = 1, mean = Lambda_x[c, ] %*% eta[i, ], sd = sqrt(Psi[c, c])) # no log transform here right
-        }
-      }
-    }
+    X_NA <- sample_Xna_rcpp(n,p, X_NA, Lambda_x, eta, Psi)
     
     # Sample Y_NA
     for (i in 1:nrow(Y_NA)) {
@@ -426,13 +350,7 @@ gibbs <- function(X, Y, X_NA, Y_NA, X_LOD, LOD_X_vec, Z, nrun, burn, thin = 1,
     }
     
     # Sample X_LOD
-    for (i in 1:nrow(X_LOD)) {
-      for(c in 1:ncol(X_LOD)){
-        if(X_LOD[i,c] != 0){
-          X_LOD[i, c] <- truncnorm::rtruncnorm(n = 1, a = -Inf, b = LOD_X_vec[c], mean = Lambda_x[c, ] %*% eta[i, ], sd = sqrt(Psi[c, c]) )
-        }
-      }
-    }
+    X_LOD <- sample_Xlod_rcpp(n,p, a = -Inf, X_LOD, Lambda_x, eta, Psi, rep(0,p))
     
     # print("Checking NA's in my updated data")
     # print("X_hollow")
@@ -480,7 +398,7 @@ gibbs <- function(X, Y, X_NA, Y_NA, X_LOD, LOD_X_vec, Z, nrun, burn, thin = 1,
     # Adjust delta_rw for metropolis hastings
     if (s%%100==0){
       print(paste("iteration", s))
-      acp_mean = mean(acp)/100
+      acp_mean = mean(ret$acp)/100
       print(acp_mean)
       if(acp_mean > 0.3){
         delta_rw = delta_rw*2
