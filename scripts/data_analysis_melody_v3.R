@@ -3,6 +3,8 @@ library(tidyverse)
 library(plyr)
 library(dplyr)
 library(mice)
+library(Rcpp)
+library(RcppArmadillo)
 
 # load data (for server)--------------------------
 load(file = "/work/yj90/SEM/data/nhanes_cov_1516.RData")
