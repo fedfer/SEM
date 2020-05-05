@@ -43,7 +43,7 @@ xi <- matrix(rnorm(n*m), n, m)
 acp = numeric(n); delta_rw =  1
 Plam = matrix(1,q,m)
 
-
+i <- 1
 
 vec_Omega_eta = apply_rcpp_Omegas(Omegas,eta[i,],m);
 vec_Delta_eta = apply_rcpp_Deltas(Deltas,eta[i,],Z[i,],m);
@@ -55,23 +55,6 @@ sample_Lambday(xi, m, q, Plam, phis,Y)
 
 
 
-# // [[Rcpp::export]]
-# // Rcpp::NumericMatrix sample_Xna_rcpp(int n, int p, Rcpp::NumericMatrix X_na, 
-#                                        //                           arma::mat Lambda_x, arma::mat eta,
-#                                        //                           arma::mat Psi){
-#   //   
-#     //   
-#     //   for(int i=0;i<n;++i){
-#       //     for(int j=0;j<p;++j){
-#         //       if(X_na(i,j) != 0){
-#           //         arma::vec noise = randn<arma::vec>(1);
-#           //         arma::mat sample = eta.row(i).t() * Lambda_x.row(j) + noise * sqrt(Psi(j, j));
-#           //         X_na(i,j) = sample(0,0);
-#           //       }
-#         //     }
-#       //   }
-#   //   return(X_na);
-#   // }
 
 
 # Check the speed up 
