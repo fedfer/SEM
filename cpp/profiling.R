@@ -135,6 +135,7 @@ mean_cpp = apply(Lambda_cpp, c(2,3), mean)
 mean_old = apply(Lambda, c(2,3), mean)
 abs(mean_old - mean_cpp) %>% mean()
 
+# xi
 
 # eta
 ret <- sample_eta_rcpp(m, n, k, delta_rw, eta,xi,X, Z, Ga,Omegas,Deltas, Sigma_xi_inv,Lambda_x, Psi_inv, acp)

@@ -15,12 +15,14 @@ library(Rcpp)
 library(RcppArmadillo)
 
 # Source custom functions (for server) ------------------------------------------------------------
-# source("/work/yj90/SEM/scripts/functions_CUSP_updates.R")
+source("/work/yj90/SEM/scripts/functions_CUSP_updates.R")
+sourceCpp("/work/yj90/SEM/cpp/functions.cpp")
+sourceCpp("/work/yj90/SEM/cpp/sample_na.cpp")
 
 # Source custom functions (local) ------------------------------------------------------------
-source("scripts/functions_CUSP_updates.R")
-sourceCpp("./cpp/functions.cpp")
-sourceCpp("./cpp/sample_na.cpp")
+# source("scripts/functions_CUSP_updates.R")
+# sourceCpp("./cpp/functions.cpp")
+# sourceCpp("./cpp/sample_na.cpp")
 
 # Gibbs sampler--------------------------------------------------------
 gibbs <- function(X, Y, X_NA, Y_NA, X_LOD, LOD_X_vec, Z, nrun, burn, thin = 1, 
