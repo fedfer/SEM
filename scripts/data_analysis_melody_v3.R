@@ -297,8 +297,8 @@ sum(vec > 0.9)
 
 
 # Gibbs ------------------------------------------
-nrun = 5
-burn = 4
+nrun = 5000
+burn = 4000
 n_samples = nrun - burn
 gibbs_result <- gibbs(X = X_hollow, Y = Y_hollow,
                       X_NA = X_NA, Y_NA = Y_NA, X_LOD = X_LOD, LOD_X_vec = LOD_X_vec, Z = Z,
