@@ -3,6 +3,7 @@ library(Rcpp)
 library(RcppArmadillo)
 library(tidyverse)
 library(microbenchmark)
+library(devtools)
 
 # To do: 
 # - etai_Delta_zi_one_mat, something like that once I understand what it is
@@ -54,7 +55,14 @@ sourceCpp("./cpp/sample_na.cpp")
 microbenchmark(R = sample_Xlod(X_lod, LOD_X_vec, Lambda_x, eta, Psi),
                RcPP = sample_Xlod_rcpp(n,p, a = -Inf, X_lod, Lambda_x, eta, Psi, rep(0,p)))
 
+<<<<<<< HEAD
+# devtools::install_github("adzemski/rtnorm")
+# https://discourse.mc-stan.org/t/dealing-with-catalina-ii/11802/42
+# library(rtnorm)
+
+=======
 i <- 1
+>>>>>>> 3d6552b2e48ff2189066765bd11fac03459dbba4
 
 vec_Omega_eta = apply_rcpp_Omegas(Omegas,eta[i,],m);
 vec_Delta_eta = apply_rcpp_Deltas(Deltas,eta[i,],Z[i,],m);
