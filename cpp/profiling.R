@@ -26,6 +26,8 @@ library(devtools)
 # - sample_Lambday_rcpp (> 4x speed up) 
 # - sample_Xna_rcpp (>10x speed up)
 # - sample_Xlod_rcpp (>10x speed up)
+# - sample_phis_rcpp and sample_ps_rcpp (2x speed up)
+
 
 # generate data and parameters
 n = 500; m = 15; k = 10; l = 20; q = 5; p = 25
@@ -50,27 +52,30 @@ X_na = X; X_na[ind] = 0
 LOD_X_vec = rep(1, p)
 X_lod = X; X_lod[ind] = 0 
 c = 1;  i = 1
+as = 1
+bs = 1
 
 sourceCpp("./cpp/sample_na.cpp")
 microbenchmark(R = sample_Xlod(X_lod, LOD_X_vec, Lambda_x, eta, Psi),
                RcPP = sample_Xlod_rcpp(n,p, a = -Inf, X_lod, Lambda_x, eta, Psi, rep(0,p)))
 
-<<<<<<< HEAD
+
 # devtools::install_github("adzemski/rtnorm")
 # https://discourse.mc-stan.org/t/dealing-with-catalina-ii/11802/42
 # library(rtnorm)
 
-=======
+sourceCpp("./cpp/functions.cpp")
 i <- 1
->>>>>>> 3d6552b2e48ff2189066765bd11fac03459dbba4
-
 vec_Omega_eta = apply_rcpp_Omegas(Omegas,eta[i,],m);
 vec_Delta_eta = apply_rcpp_Deltas(Deltas,eta[i,],Z[i,],m);
-sourceCpp("./cpp/functions.cpp")
 sample_Lambday_rcpp(xi, Plam, phis, m, q, Y)
 
 source("./cpp/Sampler_bits_old.R")
-sample_Lambday(xi, m, q, Plam, phis,Y)
+
+
+
+microbenchmark(R = sample_Phi(Y, xi, Lambda_y, q, as, n, bs, Z, alpha_mat),
+               RcPP = sample_phis_rcpp(Lambda_y ,xi,  n,  Y, as, bs, Z, alpha_mat))
 
 
 

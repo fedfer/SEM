@@ -138,4 +138,28 @@ sample_Xlod = function(X_LOD, LOD_X_vec, Lambda_x, eta, Psi){
   return(X_LOD)
 }
 
+sample_Psi = function(X, eta, Lambda_x, p, as, n, bs){
+  
+  # --- Update Psi --- #
+  # With or without interaction terms, this stays the same
+  Xtil <- X - eta%*%t(Lambda_x)
+  ps <- rgamma(n = p, shape = as + 0.5*n, rate = 1) 
+  ps <- (1 / ( bs + 0.5*apply(X = Xtil^2, MARGIN = 2, FUN = sum) ) ) * ps
+  Psi <- diag(1 / ps)
+  return(Psi)
+}
+
+sample_Phi = function(Y, xi, Lambda_y, q, as, n, bs, Z, alpha_mat){
+  
+  # --- Update Phi ---# # Added non-chem covariates
+  Ytil <- Y - xi %*% Lambda_y.T - Z %*% t(alpha_mat)
+  phis <- rgamma(n = q, shape = as + 0.5*n, rate = 1)
+  phis <- (1 / ( bs + 0.5*apply(X = Ytil^2, MARGIN = 2, FUN = sum) ) ) * phis
+  Phi <- diag(1 / phis)
+  Phi.inv <- solve(Phi)
+  return(Phi)
+}
+
+
+
 

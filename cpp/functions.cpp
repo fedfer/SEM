@@ -140,3 +140,24 @@ Rcpp::NumericMatrix sample_Lambday_rcpp(arma::mat xi, arma::mat Plam,
   }
   return Rcpp::wrap(lambda);
 }
+
+// [[Rcpp::export]]
+Rcpp::NumericVector sample_ps_rcpp(arma::mat Lambda_x, arma::mat eta,
+                                   int n, arma::mat X,
+                                   double as, double bs){
+  // --- UPDATE sigma --- //
+  arma::mat Xtil = X - eta * Lambda_x.t();
+  rowvec bsvec =  bs + 0.5 * sum(square(Xtil));
+  auto lam = [as, n](double val){return randg<double>(distr_param(as + 0.5*n, 1 / val));};
+  return Rcpp::wrap((bsvec.transform(lam)).t());
+}
+
+// [[Rcpp::export]]
+Rcpp::NumericVector sample_phis_rcpp(arma::mat Lambda_y, arma::mat xi, int n, arma::mat Y,
+                                     double as, double bs, arma::mat Z, arma::mat alpha_mat){
+  // --- UPDATE sigma --- //
+  arma::mat Ytil = Y - xi * Lambda_y.t() - Z * alpha_mat.t();
+  rowvec bsvec =  bs + 0.5 * sum(square(Ytil));
+  auto lam = [as, n](double val){return randg<double>(distr_param(as + 0.5*n, 1 / val));};
+  return Rcpp::wrap((bsvec.transform(lam)).t());
+}
