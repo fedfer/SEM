@@ -160,6 +160,85 @@ sample_Phi = function(Y, xi, Lambda_y, q, as, n, bs, Z, alpha_mat){
   return(Phi)
 }
 
+sample_Sigma_xi = function(eta, Omegas, Z, Deltas, zi, Ga,
+                           bs, as, m, n, xi){
+  
+  # --- Update Sigma_xi ---# #Added non-chem covariates
+  interactions <- t(apply(eta, c(1), function(eta_i){
+    apply(Omegas, c(1), etai_Omega_etai, etai = eta_i)
+  }))
+  tmp <- cbind(eta, Z)
+  inter_chem_cov <- t(apply(tmp, c(1), function(tmp_i){
+    apply(Deltas, c(1), etai_Delta_zi, etai = tmp_i[1:ncol(eta)], 
+          zi = tmp_i[(ncol(eta) + 1):ncol(tmp)])
+  }))
+  xi_til <- xi - eta %*% t(Ga) - interactions - inter_chem_cov
+  sig_xis <- rgamma(n = m, shape = as + 0.5*n, rate = 1)
+  sig_xis <- (1 / ( bs + 0.5*apply(X = xi_til^2, MARGIN = 2, FUN = sum) ) ) * sig_xis
+  Sigma_xi <- diag(1/sig_xis)
+  Sigma_xi_inv <- diag(sig_xis) 
+  
+}
+
+sample_Ga = function(eta, Z, m , k, Sigma_xi, Deltas, Omegas){
+  
+  # --- Update Gamma --- #  # Added non-chem covariates
+  tmp <- cbind(eta, Z)
+  eta.T = t(eta)
+  eta2 = eta.T %*% eta
+  for (j in 1:m){
+    # update Gamma by row
+    covar <- solve(diag(k) + (1/Sigma_xi[j, j]) * eta2)
+    mean <- covar %*% ( (1/Sigma_xi[j, j]) * (eta.T %*%  xi[ , j] - eta.T %*% apply(eta, c(1), etai_Omega_etai, Omega = Omegas[j,,]) -
+                                                eta.T %*%  apply(tmp, c(1), etai_Delta_zi_one_mat, Delta = Deltas[j,,] )) )
+    Ga[j, ] <- bayesSurv::rMVNorm(n = 1, mean = mean, Sigma = covar) 
+  }
+  return(Ga)
+}
+
+sample_Omegas = function(eta, k, Z, Deltas, Sigma_xi,
+                         xi, Ga){
+  
+  Omegas <- array(data = 0, c(m, k, k))
+  
+  ### --- Update Omegas --- ### # Added non-chem covariates
+  MM <- model.matrix(~ .^2 - 1,as.data.frame(eta)) # factorized regression, so that we can make use of the interaction terms
+  eta_inter <- cbind(eta^2, MM[, (k + 1):ncol(MM)]) # this is the eta star in paper
+  eta_inter.T <- t(eta_inter) # avoid repea7iutted transpose calls
+  tmp <- cbind(eta, Z)
+  inter_chem_cov <- t(apply(tmp, c(1), function(tmp_i){
+    apply(Deltas, c(1), etai_Delta_zi, etai = tmp_i[1:ncol(eta)], zi = tmp_i[(ncol(eta) + 1):ncol(tmp)])
+  }))
+  
+  # Update each Omega_j one by one
+  
+  eta_inter_2 = eta_inter.T %*% eta_inter
+  diag_eta_inter = diag(rep(1, ncol(eta_inter)))
+  
+  for (j in 1:m) {
+    
+    covar <- solve(eta_inter_2  / Sigma_xi[j, j] + diag_eta_inter )
+    mean <- covar %*% eta_inter.T %*% (xi[, j] - eta %*% Ga[j, ] - inter_chem_cov[, j]) / Sigma_xi[j, j]
+    omega_j_star <- bayesSurv::rMVNorm(n = 1, mean = mean, Sigma = covar)
+    Omega_j_diag <- omega_j_star[1:k]
+    omega_j_lower_triag <- omega_j_star[(k + 1):length(omega_j_star)]
+    Omega_j <- Omegas[j, , ]
+    Omega_j[lower.tri(Omega_j)] <- omega_j_lower_triag/2
+    Omega_j[upper.tri(Omega_j)] <- 0
+    Omega_j <- Omega_j + t(Omega_j)
+    diag(Omega_j) <- Omega_j_diag
+    
+    Omegas[j, , ] <- Omega_j
+  }
+  
+  return(Omegas)
+  
+}
+
+
+
+
+
 
 
 

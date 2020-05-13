@@ -38,6 +38,7 @@ arma::vec apply_rcpp_Deltas(arma::cube Deltas, arma::vec etai, arma::vec zi,
   return res;
 }
 
+
 // [[Rcpp::export]]
 arma::mat sample_xi_rcpp(int n, int m, arma::mat Y, arma::mat Z, arma::mat eta,
                     arma::mat Lambda_y, arma::mat Phi, arma::mat Sigma_xi_inv,
@@ -129,7 +130,7 @@ List sample_eta_rcpp(int m, int n, int k, double delta_rw,
 Rcpp::NumericMatrix sample_Lambday_rcpp(arma::mat xi, arma::mat Plam, 
                                    arma::vec phis, int m, int q, 
                                    arma::mat Y){
-  // --- UPDATE lambda --- //
+  // --- UPDATE Lambda --- //
   arma::mat lambda(q, m);
   arma::mat xi2 = xi.t() * xi;    // prepare eta crossproduct before the loop
   for(int j=0; j < q; ++j) {
@@ -145,7 +146,7 @@ Rcpp::NumericMatrix sample_Lambday_rcpp(arma::mat xi, arma::mat Plam,
 Rcpp::NumericVector sample_ps_rcpp(arma::mat Lambda_x, arma::mat eta,
                                    int n, arma::mat X,
                                    double as, double bs){
-  // --- UPDATE sigma --- //
+  // --- UPDATE Sigma --- //
   arma::mat Xtil = X - eta * Lambda_x.t();
   rowvec bsvec =  bs + 0.5 * sum(square(Xtil));
   auto lam = [as, n](double val){return randg<double>(distr_param(as + 0.5*n, 1 / val));};
@@ -155,9 +156,157 @@ Rcpp::NumericVector sample_ps_rcpp(arma::mat Lambda_x, arma::mat eta,
 // [[Rcpp::export]]
 Rcpp::NumericVector sample_phis_rcpp(arma::mat Lambda_y, arma::mat xi, int n, arma::mat Y,
                                      double as, double bs, arma::mat Z, arma::mat alpha_mat){
-  // --- UPDATE sigma --- //
+  // --- UPDATE Phi --- //
   arma::mat Ytil = Y - xi * Lambda_y.t() - Z * alpha_mat.t();
   rowvec bsvec =  bs + 0.5 * sum(square(Ytil));
   auto lam = [as, n](double val){return randg<double>(distr_param(as + 0.5*n, 1 / val));};
   return Rcpp::wrap((bsvec.transform(lam)).t());
 }
+
+
+// [[Rcpp::export]]
+arma::mat interactions_eta_Omega(arma::cube Omegas, arma::mat eta,
+                                 int n, int m){
+  arma::mat res(n,m);
+  for(int i=0; i<n; ++i){
+    res.row(i) = apply_rcpp_Omegas(Omegas, eta.row(i).t(), m).t();
+  }
+  return res;
+}
+
+// [[Rcpp::export]]
+arma::mat interactions_eta_Z(arma::cube Deltas, arma::mat eta, arma::mat Z,
+                                 int n, int m){
+  
+  arma::mat res(n,m);
+  for(int i=0; i<n; ++i){
+    res.row(i) = apply_rcpp_Deltas(Deltas, eta.row(i).t(),  Z.row(i).t(), m).t();
+  }
+  return res;
+}
+
+// [[Rcpp::export]]
+Rcpp::NumericVector sample_Sigma_xis_rcpp(arma::mat eta, arma::cube Omegas, arma::mat Z,
+                                         arma::cube Deltas, arma::mat Ga, arma::mat xi, 
+                                         double bs, double as, int m, int n){
+  // --- UPDATE Sigma_xi --- //
+  arma::mat interactions = interactions_eta_Omega(Omegas, eta, n, m);
+  arma::mat inter_chem_cov = interactions_eta_Z(Deltas, eta, Z, n, m);
+  arma::mat xi_til = xi - eta * Ga.t() - interactions - inter_chem_cov;
+  
+  rowvec bsvec =  bs + 0.5 * sum(square(xi_til));
+  auto lam = [as, n](double val){return randg<double>(distr_param(as + 0.5*n, 1 / val));};
+  return Rcpp::wrap((bsvec.transform(lam)).t());
+
+}
+
+
+// [[Rcpp::export]]
+arma::mat sample_Ga_rcpp(arma::mat eta, int m, int k, int n, arma::vec sigma_xi,
+                         arma::mat xi, arma::cube Omegas, arma::cube Deltas, 
+                         arma::mat Z){
+  
+  arma::mat eta2 = eta.t() * eta;
+  arma::mat eta_T = eta.t();
+  
+  arma::vec apply_eta_Omega(n); 
+  arma::vec apply_eta_Delta_zi(n); 
+  arma::mat Ga(m, k);
+  
+  for(int j=0; j<m; ++j){
+    
+    for(int i=0; i<n; ++i){
+      apply_eta_Omega(i) = etai_Omega_etai_rcpp(eta.row(i).t(), Omegas.row(j));
+      apply_eta_Delta_zi(i) = etai_Delta_zi_rcpp( eta.row(i).t(), Deltas.row(j), Z.row(i).t());
+    }
+    
+    arma::mat covar = inv(arma::eye<arma::mat>(k,k) + sigma_xi[j]*eta2);
+    arma::vec mu = covar * sigma_xi[j] * (eta_T * xi.col(j) - eta_T *  apply_eta_Omega - eta_T * apply_eta_Delta_zi) ;
+    arma::mat covar_chol = arma::chol(covar);
+    arma::mat noise = randn<rowvec>(k);
+    Ga.row(j) = mu.t()  + (noise * covar_chol);
+  }
+  return Ga;
+}
+
+// [[Rcpp::export]]
+arma::mat model_matrix_int(arma::mat X, int p, int n){
+  
+  int col_int = p*(p-1)/2; 
+  arma::mat X_int(n, col_int);
+  int count = 0;
+  for(int j = 0; j < p - 1; ++j){
+    for(int h = j+1; h < p; ++h){
+      for(int i=0; i < n; ++i){
+        X_int(i,count) = X(i,j)*X(i,h);
+      }
+      count = count + 1;
+    }
+  }
+  return X_int;
+}
+
+// TO BE FINISHED
+// // [[Rcpp::export]]
+// arma::cube sample_Omegas_rcpp(int m, int k, int n, arma::mat eta, 
+//                               arma::cube Deltas, arma::mat Z, arma::vec sigma_xi,
+//                               arma::mat xi, arma::mat Ga){
+//   
+//   arma::cube Omegas(m,k,k);
+//   arma::mat eta_int = join_rows(eta % eta, model_matrix_int(eta, k, n));
+//   arma::mat eta_int_T = eta_int.t();
+//   arma::mat inter_chem_cov = interactions_eta_Z(Deltas, eta, Z, n, m);
+//   arma::mat eta_inter_2 = eta_int_T * eta_int_T;
+//   int ncol_eta_int = k + k*(k-1)/2;
+//   arma::mat diag_eta_int = arma::eye<arma::mat>(ncol_eta_int,ncol_eta_int);
+//   
+//   for(int j=0; j<m; ++j){
+//     
+//     arma::mat covar = inv(diag_eta_int + sigma_xi[j]*eta_inter_2);
+//     arma::vec mu = covar * sigma_xi[j] * eta_int_T *(xi.col(j).t() - eta * Ga.row(j).t());
+//     arma::mat covar_chol = arma::chol(covar);
+//     arma::mat noise = randn<rowvec>(ncol_eta_int);
+//     arma::vec omega_j_star = mu.t()  + (noise * covar_chol);
+//     arma::vec Omega_j_diag = omega_j_star(seq(0,k-1));
+//     arma::vec mega_j_lower_triag = omega_j_star(seq(k,ncol_eta_int-1)));
+//     // TO BE FINISHED
+//     Omega_j <- Omegas[j, , ]
+//     //       Omega_j[lower.tri(Omega_j)] <- omega_j_lower_triag/2
+//     //       Omega_j[upper.tri(Omega_j)] <- 0
+//     //       Omega_j <- Omega_j + t(Omega_j)
+//     //       diag(Omega_j) <- Omega_j_diag
+//     //       
+//     //       Omegas[j, , ] <- Omega_j
+//     
+//     
+//   }
+//   
+//   return Omegas;
+// }
+
+// sample_Omegas = function(eta, k, Z, Deltas, Sigma_xi,
+//                          xi, Ga){
+//     
+//     eta_inter_2 = eta_inter.T %*% eta_inter
+//     diag_eta_inter = diag(rep(1, ncol(eta_inter)))
+//     
+//     for (j in 1:m) {
+//       
+//       covar <- solve(eta_inter_2  / Sigma_xi[j, j] + diag_eta_inter )
+//       mean <- covar %*% eta_inter.T %*% (xi[, j] - eta %*% Ga[j, ] - inter_chem_cov[, j]) / Sigma_xi[j, j]
+//       omega_j_star <- bayesSurv::rMVNorm(n = 1, mean = mean, Sigma = covar)
+//       Omega_j_diag <- omega_j_star[1:k]
+//       omega_j_lower_triag <- omega_j_star[(k + 1):length(omega_j_star)]
+//       Omega_j <- Omegas[j, , ]
+//       Omega_j[lower.tri(Omega_j)] <- omega_j_lower_triag/2
+//       Omega_j[upper.tri(Omega_j)] <- 0
+//       Omega_j <- Omega_j + t(Omega_j)
+//       diag(Omega_j) <- Omega_j_diag
+//       
+//       Omegas[j, , ] <- Omega_j
+//     }
+//     
+//     return(Omegas)
+//       
+// }
+
