@@ -236,6 +236,35 @@ sample_Omegas = function(eta, k, Z, Deltas, Sigma_xi,
 }
 
 
+sample_Deltas= function(eta, Z, k, l, Sigma_xi,
+                        Ga){
+  
+  Deltas <- array(data = 0, c(m, k, l))
+  
+  ### --- Update Deltas --- ###
+  tmp <- cbind(eta, Z)
+  eta_Z_inter <- t(apply(tmp, c(1), get_eta_Z_inter))
+  eta_Z_inter.T <- t(eta_Z_inter) #avoid repeated transpose calls
+  eta_Z_inter_transpose_eta_Z_inter <- eta_Z_inter.T %*% eta_Z_inter # avoid repeated calls
+  interactions <- t(apply(eta, c(1), function(eta_i){
+    apply(Omegas, c(1), etai_Omega_etai, etai = eta_i)
+  }))
+  # Update each Delta_j one by one
+  for (j in 1:m) {
+    covar <- solve( diag(k*l) + eta_Z_inter_transpose_eta_Z_inter / Sigma_xi[j, j] )
+    mean <- covar %*% eta_Z_inter.T %*% ( xi[, j] -  eta %*% Ga[j, ] -  interactions[, j] ) / Sigma_xi[j, j]
+    delta_j_star <- bayesSurv::rMVNorm(n = 1, mean = mean, Sigma = covar)
+    Deltas[j, , ] <- matrix(data = delta_j_star, nrow = k, ncol = l)
+  }
+
+  
+  return(Deltas)
+  
+}
+
+
+
+
 
 
 

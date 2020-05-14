@@ -60,17 +60,37 @@ bs = 1
 
 
 i <- 1
-vec_Omega_eta = apply_rcpp_Omegas(Omegas,eta[i,],m);
-vec_Delta_eta = apply_rcpp_Deltas(Deltas,eta[i,],Z[i,],m);
+
 
 source("SEM/cpp/Sampler_bits_old.R")
 
 sourceCpp("SEM/cpp/functions.cpp")
+Omeg = sample_Omegas_rcpp( m, k, n, eta, Deltas, Z,sig_xis,xi,Ga)
+Omeg[1,,]
 
-sample_Omegas_rcpp( m,  k,  n, eta)
+sample_Omegas(eta, k, Z, Deltas, Sigma_xi,xi, Ga)
+  
+microbenchmark(R = sample_Omegas(eta, k, Z, Deltas, Sigma_xi,xi, Ga),
+               RcPP = sample_Omegas_rcpp( m, k, n, eta, Deltas, Z,sig_xis,xi,Ga))
+
+
+# Omegas
+S = 1000 # put it equal to 500 at least 
+Omega_cpp = array(0, c(S, m, k, k))
+Omega_R = array(0, c(S, m, k, k))
+for(s in 1:S){
+  Omega_cpp[s,,,] = sample_Omegas_rcpp( m, k, n, eta, Deltas, Z,sig_xis,xi,Ga)
+  Omega_R[s,,,] = sample_Omegas(eta, k, Z, Deltas, Sigma_xi,xi, Ga)
+}
+
+mean_cpp = apply(Omega_cpp, c(2,3,4), mean)
+mean_old = apply(Omega_R, c(2,3,4), mean)
+abs(mean_old - mean_cpp) %>% mean()
 
 
 # Check the speed up
+vec_Omega_eta = apply_rcpp_Omegas(Omegas,eta[i,],m);
+vec_Delta_eta = apply_rcpp_Deltas(Deltas,eta[i,],Z[i,],m);
 microbenchmark(R = sample_Ga(eta, Z, m , k, Sigma_xi, Deltas, Omegas),
                RcPP = sample_Ga_rcpp(eta, m, k, n, sig_xis, xi, Omegas, Deltas, Z))
 

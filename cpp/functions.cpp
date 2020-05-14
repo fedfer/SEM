@@ -246,67 +246,80 @@ arma::mat model_matrix_int(arma::mat X, int p, int n){
   return X_int;
 }
 
-// TO BE FINISHED
-// // [[Rcpp::export]]
-// arma::cube sample_Omegas_rcpp(int m, int k, int n, arma::mat eta, 
-//                               arma::cube Deltas, arma::mat Z, arma::vec sigma_xi,
-//                               arma::mat xi, arma::mat Ga){
-//   
-//   arma::cube Omegas(m,k,k);
-//   arma::mat eta_int = join_rows(eta % eta, model_matrix_int(eta, k, n));
-//   arma::mat eta_int_T = eta_int.t();
-//   arma::mat inter_chem_cov = interactions_eta_Z(Deltas, eta, Z, n, m);
-//   arma::mat eta_inter_2 = eta_int_T * eta_int_T;
-//   int ncol_eta_int = k + k*(k-1)/2;
-//   arma::mat diag_eta_int = arma::eye<arma::mat>(ncol_eta_int,ncol_eta_int);
-//   
-//   for(int j=0; j<m; ++j){
-//     
-//     arma::mat covar = inv(diag_eta_int + sigma_xi[j]*eta_inter_2);
-//     arma::vec mu = covar * sigma_xi[j] * eta_int_T *(xi.col(j).t() - eta * Ga.row(j).t());
-//     arma::mat covar_chol = arma::chol(covar);
-//     arma::mat noise = randn<rowvec>(ncol_eta_int);
-//     arma::vec omega_j_star = mu.t()  + (noise * covar_chol);
-//     arma::vec Omega_j_diag = omega_j_star(seq(0,k-1));
-//     arma::vec mega_j_lower_triag = omega_j_star(seq(k,ncol_eta_int-1)));
-//     // TO BE FINISHED
-//     Omega_j <- Omegas[j, , ]
-//     //       Omega_j[lower.tri(Omega_j)] <- omega_j_lower_triag/2
-//     //       Omega_j[upper.tri(Omega_j)] <- 0
-//     //       Omega_j <- Omega_j + t(Omega_j)
-//     //       diag(Omega_j) <- Omega_j_diag
-//     //       
-//     //       Omegas[j, , ] <- Omega_j
-//     
-//     
-//   }
-//   
-//   return Omegas;
-// }
+// [[Rcpp::export]]
+arma::cube sample_Omegas_rcpp(int m, int k, int n, arma::mat eta, 
+                              arma::cube Deltas, arma::mat Z, arma::vec sigma_xi,
+                              arma::mat xi, arma::mat Ga){
+  
+  arma::cube Omegas(m,k,k);
+  arma::mat eta_int = join_rows(eta % eta, model_matrix_int(eta, k, n));
+  arma::mat eta_int_T = eta_int.t();
+  arma::mat inter_chem_cov = interactions_eta_Z(Deltas, eta, Z, n, m);
+  arma::mat eta_inter_2 = eta_int_T * eta_int;
+  int ncol_eta_int = k + k*(k-1)/2;
+  arma::mat diag_eta_int = arma::eye<arma::mat>(ncol_eta_int,ncol_eta_int);
+  
+  for(int j=0; j<m; ++j){
 
-// sample_Omegas = function(eta, k, Z, Deltas, Sigma_xi,
-//                          xi, Ga){
-//     
-//     eta_inter_2 = eta_inter.T %*% eta_inter
-//     diag_eta_inter = diag(rep(1, ncol(eta_inter)))
-//     
+    arma::mat covar = inv(diag_eta_int + sigma_xi[j]*eta_inter_2);
+    arma::vec mu = covar * sigma_xi[j] * eta_int_T *(xi.col(j) - eta * Ga.row(j).t() - 
+      inter_chem_cov.col(j));
+    arma::mat covar_chol = arma::chol(covar);
+    arma::mat noise = randn<rowvec>(ncol_eta_int);
+    arma::vec omega_j_star = mu  + (noise * covar_chol).t();
+    arma::mat curr_Omega(k,k);
+    
+    int count = 0;
+    for(int h=0; h<k; ++h){
+      curr_Omega(h,h) = omega_j_star(h);
+    }
+    for(int h = 0; h < k - 1; ++h){
+      for(int l = h+1; l < k; ++l){
+        curr_Omega(h,l) = omega_j_star(k + count)/2;
+        curr_Omega(l,h) = omega_j_star(k + count)/2;
+        count = count + 1;
+      }
+    }
+    Omegas.row(j) = curr_Omega;
+  }
+  return Omegas;
+}
+
+
+// [[Rcpp::export]]
+arma::cube sample_Deltas_rcpp(int m, int k, int l){
+  
+  arma::cube Deltas(m, k, l);
+
+  return Deltas;
+}
+
+
+
+// sample_Deltas= function(eta, Z, k, l, Sigma_xi,
+//                         Ga){
+//   
+//   Deltas <- array(data = 0, c(m, k, l))
+//   
+// ### --- Update Deltas --- ###
+//   tmp <- cbind(eta, Z)
+//     eta_Z_inter <- t(apply(tmp, c(1), get_eta_Z_inter))
+//     eta_Z_inter.T <- t(eta_Z_inter) #avoid repeated transpose calls
+//     eta_Z_inter_transpose_eta_Z_inter <- eta_Z_inter.T %*% eta_Z_inter # avoid repeated calls
+//     interactions <- t(apply(eta, c(1), function(eta_i){
+//       apply(Omegas, c(1), etai_Omega_etai, etai = eta_i)
+//     }))
+// # Update each Delta_j one by one
 //     for (j in 1:m) {
-//       
-//       covar <- solve(eta_inter_2  / Sigma_xi[j, j] + diag_eta_inter )
-//       mean <- covar %*% eta_inter.T %*% (xi[, j] - eta %*% Ga[j, ] - inter_chem_cov[, j]) / Sigma_xi[j, j]
-//       omega_j_star <- bayesSurv::rMVNorm(n = 1, mean = mean, Sigma = covar)
-//       Omega_j_diag <- omega_j_star[1:k]
-//       omega_j_lower_triag <- omega_j_star[(k + 1):length(omega_j_star)]
-//       Omega_j <- Omegas[j, , ]
-//       Omega_j[lower.tri(Omega_j)] <- omega_j_lower_triag/2
-//       Omega_j[upper.tri(Omega_j)] <- 0
-//       Omega_j <- Omega_j + t(Omega_j)
-//       diag(Omega_j) <- Omega_j_diag
-//       
-//       Omegas[j, , ] <- Omega_j
+//       covar <- solve( diag(k*l) + eta_Z_inter_transpose_eta_Z_inter / Sigma_xi[j, j] )
+//       mean <- covar %*% eta_Z_inter.T %*% ( xi[, j] -  eta %*% Ga[j, ] -  interactions[, j] ) / Sigma_xi[j, j]
+//       delta_j_star <- bayesSurv::rMVNorm(n = 1, mean = mean, Sigma = covar)
+//       Deltas[j, , ] <- matrix(data = delta_j_star, nrow = k, ncol = l)
 //     }
 //     
-//     return(Omegas)
+//     
+//     return(Deltas)
 //       
 // }
+
 
