@@ -287,39 +287,61 @@ arma::cube sample_Omegas_rcpp(int m, int k, int n, arma::mat eta,
 
 
 // [[Rcpp::export]]
-arma::cube sample_Deltas_rcpp(int m, int k, int l){
+arma::vec get_eta_Z_inter_rcpp(arma::vec eta_i, arma::vec Z_i, int k, int l){
   
-  arma::cube Deltas(m, k, l);
+  int count = 0;
+  arma::vec eta_Z_i(k*l);
+  for(int h = 0; h < l; ++h){
+    for(int j = 0; j < k; ++j){
+      eta_Z_i(count) = eta_i(j)*Z_i(h);
+      count = count + 1;
+    }
+  }
 
-  return Deltas;
+  return eta_Z_i;
 }
 
+// [[Rcpp::export]]
+arma::cube sample_Deltas_rcpp(int m, int k, int l, int n, arma::mat Z,
+                              arma::mat eta, arma::cube Omegas,
+                              arma::vec sigma_xi, arma::mat xi,
+                              arma::mat Ga){
+  
+  arma::cube Deltas(m, k, l);
+  
+  arma::mat eta_Z_inter(n,k*l);
+  for(int i=0; i<n; ++i){
+    eta_Z_inter.row(i) = get_eta_Z_inter_rcpp(eta.row(i).t(),  Z.row(i).t(), k, l).t();
+  }
+  arma::mat eta_Z_inter_T = eta_Z_inter.t();
+  arma::mat eta_Z_inter_transpose_eta_Z_inter = eta_Z_inter_T * eta_Z_inter;
+  arma::mat interactions = interactions_eta_Omega(Omegas, eta, n, m);
+    
+  int n_col_diag = k*l;
+  arma::mat diag_mat = arma::eye<arma::mat>(n_col_diag,n_col_diag);
+  for(int j=0; j < m; ++j){
+    
+    arma::mat covar = inv(diag_mat + sigma_xi[j]*eta_Z_inter_transpose_eta_Z_inter);
+    arma::vec mu = covar * sigma_xi[j] * eta_Z_inter_T *(xi.col(j) - eta * Ga.row(j).t() - 
+      interactions.col(j));
+    arma::mat covar_chol = arma::chol(covar);
+    arma::mat noise = randn<rowvec>(n_col_diag);
+    arma::vec Delta_j_vec = mu  + (noise * covar_chol).t();
+    
+    int count = 0;
+    arma::mat Delta_j_mat(k,l);
+    
+    for(int j = 0; j < l; ++j){
+      for(int h = 0; h < k; ++h){
+        Delta_j_mat(h,j) = Delta_j_vec(count);
+        count = count + 1;
+      }
+    }
 
-
-// sample_Deltas= function(eta, Z, k, l, Sigma_xi,
-//                         Ga){
-//   
-//   Deltas <- array(data = 0, c(m, k, l))
-//   
-// ### --- Update Deltas --- ###
-//   tmp <- cbind(eta, Z)
-//     eta_Z_inter <- t(apply(tmp, c(1), get_eta_Z_inter))
-//     eta_Z_inter.T <- t(eta_Z_inter) #avoid repeated transpose calls
-//     eta_Z_inter_transpose_eta_Z_inter <- eta_Z_inter.T %*% eta_Z_inter # avoid repeated calls
-//     interactions <- t(apply(eta, c(1), function(eta_i){
-//       apply(Omegas, c(1), etai_Omega_etai, etai = eta_i)
-//     }))
-// # Update each Delta_j one by one
-//     for (j in 1:m) {
-//       covar <- solve( diag(k*l) + eta_Z_inter_transpose_eta_Z_inter / Sigma_xi[j, j] )
-//       mean <- covar %*% eta_Z_inter.T %*% ( xi[, j] -  eta %*% Ga[j, ] -  interactions[, j] ) / Sigma_xi[j, j]
-//       delta_j_star <- bayesSurv::rMVNorm(n = 1, mean = mean, Sigma = covar)
-//       Deltas[j, , ] <- matrix(data = delta_j_star, nrow = k, ncol = l)
-//     }
-//     
-//     
-//     return(Deltas)
-//       
-// }
-
+    Deltas.row(j) = Delta_j_mat;
+    
+  }
+  
+  return Deltas;
+}
 

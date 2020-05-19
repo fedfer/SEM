@@ -28,7 +28,9 @@ library(devtools)
 # - sample_Xlod_rcpp (>10x speed up)
 # - sample_phis_rcpp and sample_ps_rcpp (2x speed up)
 # - sample_Sigma_xis_rcpp (20x speed up)
-# - sample_Ga (20x speed up)
+# - sample_Ga_rcpp (20x speed up)
+# - sample_Omegas_rcpp (20x speed up)
+# - sample_Deltas_rcpp (10x speed up)
 
 
 
@@ -62,11 +64,26 @@ bs = 1
 i <- 1
 
 
-source("SEM/cpp/Sampler_bits_old.R")
+source("./cpp/Sampler_bits_old.R")
+sourceCpp("./cpp/functions.cpp")
 
-sourceCpp("SEM/cpp/functions.cpp")
-Omeg = sample_Omegas_rcpp( m, k, n, eta, Deltas, Z,sig_xis,xi,Ga)
-Omeg[1,,]
+microbenchmark(R = sample_Deltas(eta, Z, k, l, Sigma_xi,Ga,Omegas,xi),
+               RcPP = sample_Deltas_rcpp( m,  k,  l,  n, Z, eta, Omegas, sig_xis,  xi,Ga))
+
+
+# Deltas  
+S = 500 # put it equal to 500 at least 
+Deltas_rcpp = array(0, c(S, m, k, l))
+Deltas_r = array(0, c(S, m, k, l))
+for(s in 1:S){
+  Deltas_rcpp[s,,,] = sample_Deltas_rcpp( m,  k,  l,  n, Z, eta, Omegas, sig_xis,  xi,Ga)
+  Deltas_r[s,,,] = sample_Deltas(eta, Z, k, l, Sigma_xi,Ga,Omegas,xi)
+}
+
+mean_cpp = apply(Deltas_rcpp, c(2,3,4), mean)
+mean_old = apply(Deltas_r, c(2,3,4), mean)
+abs(mean_old - mean_cpp) %>% mean()
+
 
 sample_Omegas(eta, k, Z, Deltas, Sigma_xi,xi, Ga)
   

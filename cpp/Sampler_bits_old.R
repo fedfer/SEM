@@ -237,7 +237,7 @@ sample_Omegas = function(eta, k, Z, Deltas, Sigma_xi,
 
 
 sample_Deltas= function(eta, Z, k, l, Sigma_xi,
-                        Ga){
+                        Ga,Omegas,  xi){
   
   Deltas <- array(data = 0, c(m, k, l))
   
