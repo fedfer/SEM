@@ -17,7 +17,7 @@ load(file = "/work/yj90/SEM/data/nhanes_chem_1516.RData")
 # load(file = "data/nhanes_chem_1516.RData")
 
 # source (server)--------------------------
-# source("/work/yj90/SEM/scripts/gibbs_inter_cov_missing_v1.R")
+source("/work/yj90/SEM/scripts/gibbs_inter_cov_missing_v1.R")
 source("/work/yj90/SEM/scripts/gibbs_cpp.R")
  
 # source (local)--------------------------
@@ -297,8 +297,8 @@ sum(vec > 0.9)
 
 
 # Gibbs ------------------------------------------
-nrun = 5000
-burn = 4000
+nrun = 1500
+burn = 2000
 n_samples = nrun - burn
 gibbs_result <- gibbs(X = X_hollow, Y = Y_hollow,
                       X_NA = X_NA, Y_NA = Y_NA, X_LOD = X_LOD, LOD_X_vec = LOD_X_vec, Z = Z,

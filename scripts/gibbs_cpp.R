@@ -271,33 +271,9 @@ gibbs <- function(X, Y, X_NA, Y_NA, X_LOD, LOD_X_vec, Z, nrun, burn, thin = 1,
     
     
     ### --- Update Omegas --- ### # Added non-chem covariates
-    MM <- model.matrix(~ .^2 - 1,as.data.frame(eta)) # factorized regression, so that we can make use of the interaction terms
-    eta_inter <- cbind(eta^2, MM[, (k + 1):ncol(MM)]) # this is the eta star in paper
-    eta_inter.T <- t(eta_inter) # avoid repeated transpose calls
-    tmp <- cbind(eta, Z)
-    inter_chem_cov <- t(apply(tmp, c(1), function(tmp_i){
-      apply(Deltas, c(1), etai_Delta_zi_rcpp, etai = tmp_i[1:ncol(eta)], zi = tmp_i[(ncol(eta) + 1):ncol(tmp)])
-    }))
-    # Update each Omega_j one by one
-    
-    eta_inter_2 = eta_inter.T %*% eta_inter
-    diag_eta_inter = diag(rep(1, ncol(eta_inter)))
-    
-    for (j in 1:m) {
-      
-      covar <- solve(eta_inter_2  / Sigma_xi[j, j] + diag_eta_inter )
-      mean <- covar %*% eta_inter.T %*% (xi[, j] - eta %*% Ga[j, ] - inter_chem_cov[, j]) / Sigma_xi[j, j]
-      omega_j_star <- bayesSurv::rMVNorm(n = 1, mean = mean, Sigma = covar)
-      Omega_j_diag <- omega_j_star[1:k]
-      omega_j_lower_triag <- omega_j_star[(k + 1):length(omega_j_star)]
-      Omega_j <- Omegas[j, , ]
-      Omega_j[lower.tri(Omega_j)] <- omega_j_lower_triag/2
-      Omega_j[upper.tri(Omega_j)] <- 0
-      Omega_j <- Omega_j + t(Omega_j)
-      diag(Omega_j) <- Omega_j_diag
-      
-      Omegas[j, , ] <- Omega_j
-    }
+    Omegas <- sample_Omegas_rcpp(m, k, n, eta, 
+                                 Deltas, Z, Sigma_xi,
+                                 xi, Ga)
     
     ### --- Update alpha_mat --- ###
     for (j in 1:q) {
@@ -307,34 +283,10 @@ gibbs <- function(X, Y, X_NA, Y_NA, X_LOD, LOD_X_vec, Z, nrun, burn, thin = 1,
     }
     
     ### --- Update Deltas --- ###
-    tmp <- cbind(eta, Z)
-    eta_Z_inter <- t(apply(tmp, c(1), get_eta_Z_inter))
-    eta_Z_inter.T <- t(eta_Z_inter) #avoid repeated transpose calls
-    eta_Z_inter_transpose_eta_Z_inter <- eta_Z_inter.T %*% eta_Z_inter # avoid repeated calls
-    interactions <- t(apply(eta, c(1), function(eta_i){
-      apply(Omegas, c(1), etai_Omega_etai_rcpp, etai = eta_i)
-    }))
-    # Update each Delta_j one by one
-    for (j in 1:m) {
-      # print("update deltas iteration")
-      # print(j)
-      # print("dimension of eta_Z_inter_transpose_eta_Z_inter")
-      # print(dim(eta_Z_inter_transpose_eta_Z_inter))
-      # print("dimension of eta_Z_inter")
-      # print(dim(eta_Z_inter))
-      # print("dimension of eta")
-      # print(dim(eta))
-      # print("dimension of Z")
-      # print(dim(Z))
-      # print("k")
-      # print(k)
-      # print("l")
-      # print(l)
-      covar <- solve( diag(k*l) + eta_Z_inter_transpose_eta_Z_inter / Sigma_xi[j, j] )
-      mean <- covar %*% eta_Z_inter.T %*% ( xi[, j] -  eta %*% Ga[j, ] -  interactions[, j] ) / Sigma_xi[j, j]
-      delta_j_star <- bayesSurv::rMVNorm(n = 1, mean = mean, Sigma = covar)
-      Deltas[j, , ] <- matrix(data = delta_j_star, nrow = k, ncol = l)
-    }
+    Deltas <- sample_Deltas_rcpp(m, k, l, n, Z,
+                                 eta, Omegas,
+                                 Sigma_xi, xi,
+                                 Ga)
     
     #######################
     # Sample missing data #
