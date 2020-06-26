@@ -15,14 +15,14 @@ library(Rcpp)
 library(RcppArmadillo)
 
 # Source custom functions (for server) ------------------------------------------------------------
-# source("/work/yj90/SEM/scripts/functions_CUSP_updates.R")
-# sourceCpp("/work/yj90/SEM/cpp/functions.cpp")
-# sourceCpp("/work/yj90/SEM/cpp/sample_na.cpp")
+source("/work/yj90/SEM/scripts/functions_CUSP_updates.R")
+sourceCpp("/work/yj90/SEM/cpp/functions.cpp")
+sourceCpp("/work/yj90/SEM/cpp/sample_na.cpp")
 
 # Source custom functions (local) ------------------------------------------------------------
-source("scripts/functions_CUSP_updates.R")
-sourceCpp("./cpp/functions.cpp")
-sourceCpp("./cpp/sample_na.cpp")
+# source("scripts/functions_CUSP_updates.R")
+# sourceCpp("./cpp/functions.cpp")
+# sourceCpp("./cpp/sample_na.cpp")
 
 # Gibbs sampler--------------------------------------------------------
 gibbs <- function(X, Y, X_NA, Y_NA, X_LOD, LOD_X_vec, Z, nrun, burn, thin = 1, 
@@ -151,17 +151,20 @@ gibbs <- function(X, Y, X_NA, Y_NA, X_LOD, LOD_X_vec, Z, nrun, burn, thin = 1,
     # With or without interaction terms, this stays the same
     Xtil <- X - eta%*%Lambda_x.T
     ps <- sample_ps_rcpp(Lambda_x, eta, n, X, as, bs)
-    Psi <- diag(1 / ps)
+    ps <- c(ps)
+    Psi <- diag(1/ps)
     
     # --- Update Phi ---# # Added non-chem covariates
     Ytil <- Y - xi %*% Lambda_y.T - Z %*% alpha_mat.T
     phis <- sample_phis_rcpp(Lambda_y, xi, n, Y, as, bs, Z, alpha_mat)
-    Phi <- diag(1 / phis)
+    phis <- c(phis)
+    Phi <- diag(1/phis)
     Phi.inv <- solve(Phi)
     
     # --- Update Sigma_xi ---# #Added non-chem covariates
-    Sigma_xi <- sample_Sigma_xis_rcpp(eta, Omegas, Z, Deltas, Ga, xi, bs, as, m, n)
-    print(dim(Sigma_xi))
+    sig_xis <- sample_Sigma_xis_rcpp(eta, Omegas, Z, Deltas, Ga, xi, bs, as, m, n)
+    sig_xis <- c(sig_xis)
+    Sigma_xi <- diag(1/sig_xis)
     Sigma_xi_inv <- solve(Sigma_xi)
     
     # --- Update xi --- #
@@ -169,15 +172,7 @@ gibbs <- function(X, Y, X_NA, Y_NA, X_LOD, LOD_X_vec, Z, nrun, burn, thin = 1,
     xi.T <- t(xi)
     
     # --- Update Gamma --- #  # Added non-chem covariates
-    tmp <- cbind(eta, Z)
-    eta2 = eta.T %*% eta
-    for (j in 1:m) {
-      # update Gamma by row
-      covar <- solve(diag(k) + (1/Sigma_xi[j, j]) * eta2)
-      mean <- covar %*% ( (1/Sigma_xi[j, j]) * (eta.T %*%  xi[ , j] - eta.T %*% apply(eta, c(1), etai_Omega_etai_rcpp, Omega = Omegas[j,,]) -
-                                                  eta.T %*%  apply(tmp, c(1), etai_Delta_zi_one_mat, Delta = Deltas[j,,] )) )
-      Ga[j, ] <- bayesSurv::rMVNorm(n = 1, mean = mean, Sigma = covar) 
-    }
+    Ga <- sample_Ga_rcpp(eta, m, k, n, Sigma_xi, xi, Omegas, Deltas, Z)
     Ga.T <- t(Ga) # update transpose of Gamma
     
     # --- Update eta --- #

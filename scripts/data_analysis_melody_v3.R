@@ -209,8 +209,8 @@ Z <- as.matrix(Z)
 X <- df[,(ncol(Y) + ncol(Z) + 1):ncol(df)]
 
 # Center Y and X ----
-X_scaled <- scale(X, scale = FALSE)
-Y_scaled <- scale(Y, scale = FALSE)
+X_scaled <- scale(X, scale = TRUE)
+Y_scaled <- scale(Y, scale = TRUE)
 X <- X_scaled
 Y <- Y_scaled
 
@@ -296,8 +296,8 @@ sum(vec > 0.9)
 
 
 # Gibbs ------------------------------------------
-nrun = 6
-burn = 3
+nrun = 2000
+burn = 1500
 n_samples = nrun - burn
 gibbs_result <- gibbs(X = X_hollow, Y = Y_hollow,
                       X_NA = X_NA, Y_NA = Y_NA, X_LOD = X_LOD, LOD_X_vec = LOD_X_vec, Z = Z,
