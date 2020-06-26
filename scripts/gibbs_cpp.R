@@ -15,14 +15,14 @@ library(Rcpp)
 library(RcppArmadillo)
 
 # Source custom functions (for server) ------------------------------------------------------------
-source("/work/yj90/SEM/scripts/functions_CUSP_updates.R")
-sourceCpp("/work/yj90/SEM/cpp/functions.cpp")
-sourceCpp("/work/yj90/SEM/cpp/sample_na.cpp")
+# source("/work/yj90/SEM/scripts/functions_CUSP_updates.R")
+# sourceCpp("/work/yj90/SEM/cpp/functions.cpp")
+# sourceCpp("/work/yj90/SEM/cpp/sample_na.cpp")
 
 # Source custom functions (local) ------------------------------------------------------------
-# source("scripts/functions_CUSP_updates.R")
-# sourceCpp("./cpp/functions.cpp")
-# sourceCpp("./cpp/sample_na.cpp")
+source("scripts/functions_CUSP_updates.R")
+sourceCpp("./cpp/functions.cpp")
+sourceCpp("./cpp/sample_na.cpp")
 
 # Gibbs sampler--------------------------------------------------------
 gibbs <- function(X, Y, X_NA, Y_NA, X_LOD, LOD_X_vec, Z, nrun, burn, thin = 1, 
@@ -150,31 +150,19 @@ gibbs <- function(X, Y, X_NA, Y_NA, X_LOD, LOD_X_vec, Z, nrun, burn, thin = 1,
     # --- Update Psi --- #
     # With or without interaction terms, this stays the same
     Xtil <- X - eta%*%Lambda_x.T
-    ps <- rgamma(n = p, shape = as + 0.5*n, rate = 1) 
-    ps <- (1 / ( bs + 0.5*apply(X = Xtil^2, MARGIN = 2, FUN = sum) ) ) * ps
+    ps <- sample_ps_rcpp(Lambda_x, eta, n, X, as, bs)
     Psi <- diag(1 / ps)
     
     # --- Update Phi ---# # Added non-chem covariates
     Ytil <- Y - xi %*% Lambda_y.T - Z %*% alpha_mat.T
-    phis <- rgamma(n = q, shape = as + 0.5*n, rate = 1)
-    phis <- (1 / ( bs + 0.5*apply(X = Ytil^2, MARGIN = 2, FUN = sum) ) ) * phis
+    phis <- sample_phis_rcpp(Lambda_y, xi, n, Y, as, bs, Z, alpha_mat)
     Phi <- diag(1 / phis)
     Phi.inv <- solve(Phi)
     
     # --- Update Sigma_xi ---# #Added non-chem covariates
-    interactions <- t(apply(eta, c(1), function(eta_i){
-      apply(Omegas, c(1), etai_Omega_etai_rcpp, etai = eta_i)
-    }))
-    tmp <- cbind(eta, Z)
-    inter_chem_cov <- t(apply(tmp, c(1), function(tmp_i){
-      apply(Deltas, c(1), etai_Delta_zi_rcpp, etai = tmp_i[1:ncol(eta)], 
-            zi = tmp_i[(ncol(eta) + 1):ncol(tmp)])
-    }))
-    xi_til <- xi - eta %*% Ga.T - interactions - inter_chem_cov
-    sig_xis <- rgamma(n = m, shape = as + 0.5*n, rate = 1)
-    sig_xis <- (1 / ( bs + 0.5*apply(X = xi_til^2, MARGIN = 2, FUN = sum) ) ) * sig_xis
-    Sigma_xi <- diag(1/sig_xis)
-    Sigma_xi_inv <- diag(sig_xis) 
+    Sigma_xi <- sample_Sigma_xis_rcpp(eta, Omegas, Z, Deltas, Ga, xi, bs, as, m, n)
+    print(dim(Sigma_xi))
+    Sigma_xi_inv <- solve(Sigma_xi)
     
     # --- Update xi --- #
     xi <- sample_xi_rcpp(n,m,Y,Z,eta,Lambda_y,Phi,Sigma_xi_inv, alpha_mat, Ga, Omegas, Deltas)
