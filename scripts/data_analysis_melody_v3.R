@@ -305,7 +305,7 @@ gibbs_result <- gibbs(X = X_hollow, Y = Y_hollow,
                       k = 32, m = 2, a = 1/2, delta_rw = 0.1) # maybe startoff delta_rw as 0.05, acceptance rate high at first then became too low for 0.1
 
 results_dir="/work/yj90/SEM/"
-saveRDS(gibbs_result, file.path(results_dir, "gibbs_results.rds"))
+saveRDS(gibbs_result, file.path(results_dir, "gibbs_results_2.rds"))
 
 
 

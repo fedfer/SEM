@@ -1,4 +1,5 @@
 library(ggplot2)
+library(infinitefactor)
 
 gibbs_out <- readRDS(file = "gibbs_results.rds")
 
@@ -31,7 +32,7 @@ for (i in 1:4) {
 dev.off()
 
 # compute coefficients for interactions
-inter_coeff_est_st <- apply(gibbs_out$inter_coeff_st, c(2, 3, 4), mean) # What type of value is this?
+inter_coeff_est_st <- apply(gibbs_out$inter_coeff_st, c(2, 3, 4), mean)
 # analyze coefficients for BMI
 inter_coeff_est_BMI <- inter_coeff_est_st[4,,]
 
@@ -50,33 +51,104 @@ for (i in 1:p) {
   }
 }
 
-heatmap(true_inter_coeff_est_BMI)
+# heatmap(true_inter_coeff_est_BMI)
+# dev.off()
 
 vec_true_inter_coeff_est_BMI <- c(true_inter_coeff_est_BMI)
 
-par(mfrow=c(2,1))
 
 plot(vec_true_inter_coeff_est_BMI)
 
 # values of coefficients greater than 0.05
-inter_coeff_est_BMI_0.05 <- true_inter_coeff_est_BMI
-inter_coeff_est_BMI_0.05[abs(inter_coeff_est_BMI_0.05) < 0.05]=0 
-plot(c(inter_coeff_est_BMI_0.05))
+# inter_coeff_est_BMI_0.05 <- true_inter_coeff_est_BMI
+# inter_coeff_est_BMI_0.05[abs(inter_coeff_est_BMI_0.05) < 0.05]=0 
+# plot(c(inter_coeff_est_BMI_0.05))
+# 
+# dev.off()
 
-dev.off()
+# values of coefficients greater than 0.1                 
+# inter_coeff_est_BMI_0.1 <- true_inter_coeff_est_BMI
+# inter_coeff_est_BMI_0.1[abs(inter_coeff_est_BMI_0.1) < 0.1]=0 
+# plot(c(inter_coeff_est_BMI_0.1))
 
-# values of coefficients greater than 0.1                  # how small counts?
-inter_coeff_est_BMI_0.1 <- true_inter_coeff_est_BMI
-inter_coeff_est_BMI_0.1[abs(inter_coeff_est_BMI_0.1) < 0.1]=0 
-plot(c(inter_coeff_est_BMI_0.1))
+# 95% Credible intervals for interactions coefficients-------
+inter_coeff_lower_interval <- apply(gibbs_out$inter_coeff_st, c(2, 3, 4), function(x){
+  interval <- quantile(x, probs = c(0.025, 0.075))
+  return(interval[1])
+})
+inter_coeff_lower_interval_BMI <- inter_coeff_lower_interval[4,,]
 
-# Credible intervals-------
+inter_coeff_upper_interval <- apply(gibbs_out$inter_coeff_st, c(2, 3, 4), function(x){
+  interval <- quantile(x, probs = c(0.025, 0.075))
+  return(interval[2])
+})
+inter_coeff_upper_interval_BMI <- inter_coeff_upper_interval[4,,]
+
+# sanity check on the intervals
+sum((inter_coeff_upper_interval_BMI - inter_coeff_lower_interval_BMI) < 0) # passed
+
+# interaction coefficients with 0 not in credible interval-----
+tmp_nrow = nrow(true_inter_coeff_est_BMI)
+tmp_ncol = ncol(true_inter_coeff_est_BMI)
+mat_select_BMI <- matrix(data = 0, nrow = tmp_nrow, ncol = tmp_ncol) # Quick way to select entrie using zero one or true false matrix?
+for (i in 1:tmp_nrow) {
+  for (j in 1:tmp_ncol) {
+    if (0 < inter_coeff_lower_interval_BMI[i, j] | 0 > inter_coeff_upper_interval_BMI[i, j]) {
+      mat_select_BMI[i, j] = 1
+    }
+  }
+}
+signif_inter_BMI <- matrix(data = NA, nrow = sum(mat_select_BMI), ncol = 1)
+for (i in 1:tmp_nrow) {
+  for (i in 1:tmp_ncol) {
+    if (mat_select_BMI[i, j] = 1) {
+      ### How to deal with symmetry here when considering credible intervals for interactions? ###
+    }
+  }
+}
 
 
 # Main effects-------------------
 true_coeff_est <- apply(gibbs_out$coeff_st, c(2, 3), mean)
 true_coeff_est_BMI <- true_coeff_est[4,]
-plot(true_coeff_est_BMI) # coefficients for main effects seems to be smaller than interactions
+
+plot(c(true_coeff_est_BMI))
+
+# 95% Credible intervals for main effects-------
+main_coeff_lower_interval <- apply(gibbs_out$coeff_st, c(2, 3), function(x){
+  interval <- quantile(x, probs = c(0.025, 0.075))
+  return(interval[1])
+})
+main_coeff_lower_interval_BMI <- main_coeff_lower_interval[4,]
+
+main_coeff_upper_interval <- apply(gibbs_out$coeff_st, c(2, 3), function(x){
+  interval <- quantile(x, probs = c(0.025, 0.075))
+  return(interval[2])
+})
+main_coeff_upper_interval_BMI <- main_coeff_upper_interval[4,]
+
+# main coefficients with 0 not in credible interval-----
+tmp_length <- length(true_coeff_est_BMI)
+vec_select_BMI <- rep(0, times = tmp_length)
+for (i in 1:tmp_length) {
+  if (0 < main_coeff_lower_interval_BMI[i] | 0 > main_coeff_upper_interval_BMI[i] ) {
+    vec_select_BMI[i] = 1
+  }
+}
+signif_main_BMI <- matrix(data = NA, nrow = sum(vec_select_BMI), ncol = 1)
+rownames_signif_main_BMI <- vector(mode = "character", length = nrow(signif_main_BMI))
+j <- 1
+for (i in 1:tmp_length) {
+  if (vec_select_BMI[i] == 1) {
+    signif_main_BMI[j, 1] = true_coeff_est_BMI[i]
+    rownames_signif_main_BMI[j] <- chem_names[i]
+    j <- j + 1
+  }
+}
+rownames(signif_main_BMI) <- rownames_signif_main_BMI
+signif_main_BMI
+
+
 
 
 # Get chemical names for main effects------------
@@ -86,4 +158,7 @@ plot(coeff_est_BMI_0.05)
 chem_names[coeff_est_BMI_0.05 != 0]
 
 # Get chemical names for interactions-----------
+
+# Analysis for Lambda-----
+
 
