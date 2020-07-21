@@ -204,13 +204,17 @@ gibbs <- function(X, Y, X_NA, Y_NA, X_LOD, LOD_X_vec, Z, nrun, burn, thin = 1,
     
     # --- Update rhojh --- #
     mujh = zetajh*matrix(rep(tau,m),q,m,byrow = F)/abs(Lambda_y)
-    rhojh <- matrix(statmod::rinvgauss(m*q, mujh),q,m,byrow = T)
-    
+    # rhojh <- matrix(statmod::rinvgauss(m*q, mujh),q,m,byrow = T)
+    # Modified after Hanyu e-mail, to be checked, same as tau update
+    rhojh <- 1/matrix(statmod::rinvgauss(m*q, mujh),q,m,byrow = T)
     
     # --- Update tau --- #
     for(j in 1:q){
-      tau[j] = GIGrvg::rgig(n=1,lambda = 1-m, psi = 1, 
+      # tau[j] = GIGrvg::rgig(n=1,lambda = 1-m, psi = 1, 
+      #                       chi = 2*sum(abs(Lambda_y[j,])/zetajh[j,]))
+      tau[j] = GIGrvg::rgig(n=1,lambda = m/2-m, psi = 1, 
                             chi = 2*sum(abs(Lambda_y[j,])/zetajh[j,]))
+
     }
     
     
