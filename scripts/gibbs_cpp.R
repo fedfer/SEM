@@ -113,6 +113,8 @@ gibbs <- function(X, Y, X_NA, Y_NA, X_LOD, LOD_X_vec, Z, nrun, burn, thin = 1,
   inter_cov_coeff_st <- array(0, c(nrun - burn, q, p, l) )
   Lambda_x_st <- array(0, c(nrun - burn, p, k))
   Lambda_y_st <- array(0, c(nrun-burn, q, m))
+  eta_st <- array(0, c(nrun - burn, n, k))
+  xi_st <- array(0, c(nrun - burn, n, m))
   acp <- numeric(n)
   count <- 1 # sample timing
   
@@ -318,6 +320,8 @@ gibbs <- function(X, Y, X_NA, Y_NA, X_LOD, LOD_X_vec, Z, nrun, burn, thin = 1,
       Psi_st[count, , ] <- Psi
       Lambda_x_st[count, , ] <- Lambda_x
       Lambda_y_st[count, , ] <- Lambda_y
+      eta_st[count, , ] <- eta
+      xi_st[count, , ] <- xi
       V_n <- solve(Lambda_x.T %*% solve(Psi) %*% Lambda_x + solve(Sigma_eta))
       A_n <- V_n %*% Lambda_x.T %*% solve(Psi)
       A_n.T <- t(A_n)
@@ -356,6 +360,8 @@ gibbs <- function(X, Y, X_NA, Y_NA, X_LOD, LOD_X_vec, Z, nrun, burn, thin = 1,
               Psi_st = Psi_st,
               Lambda_x_st = Lambda_x_st,
               Lambda_y_st = Lambda_y_st,
+              eta_st = eta_st,
+              xi_st = xi_st,
               coeff_st = coeff_st,
               Omegas_st = Omegas_st,
               acp = acp/(nrun-burn),
