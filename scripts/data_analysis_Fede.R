@@ -17,7 +17,7 @@ load(file = "/work/sta790/ff31/SEM/data/nhanes_chem_1516.RData")
 # load(file = "data/nhanes_chem_1516.RData")
 
 # source (server)--------------------------
-source("/work/sta790/ff31/SEM/scripts/gibbs_cpp.R")
+source("/work/sta790/ff31/SEM/scripts/gibbs_cpp_Fede.R")
  
 # source (local)--------------------------
 # source("scripts/gibbs_inter_cov_missing_v1.R")
