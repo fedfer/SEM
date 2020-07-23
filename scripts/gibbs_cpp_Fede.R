@@ -14,7 +14,7 @@ library(matrixcalc)
 library(Rcpp)
 library(RcppArmadillo)
 
-# Source custom functions (for server) ------------------------------------------------------------
+# # Source custom functions (for server) ------------------------------------------------------------
 source("/work/sta790/ff31/SEM/scripts/functions_CUSP_updates.R")
 sourceCpp("/work/sta790/ff31/SEM/cpp/functions.cpp")
 sourceCpp("/work/sta790/ff31/SEM/cpp/sample_na.cpp")

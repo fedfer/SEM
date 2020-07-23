@@ -1,7 +1,7 @@
 library(ggplot2)
 library(infinitefactor)
 
-gibbs_out <- readRDS(file = "gibbs_results.rds")  # I didn't store loadings matrix and latent variables in this run
+gibbs_out <- readRDS(file = "gibbs_results_Feder.rds")  # I didn't store loadings matrix and latent variables in this run
 
 plot(gibbs_out$acp) # Problem with storing acp in gibbs sampler
 
@@ -73,13 +73,13 @@ plot(vec_true_inter_coeff_est_BMI)
 
 # 95% Credible intervals for interactions coefficients-------
 inter_coeff_lower_interval <- apply(gibbs_out$inter_coeff_st, c(2, 3, 4), function(x){
-  interval <- quantile(x, probs = c(0.025, 0.075))
+  interval <- quantile(x, probs = c(0.025, 0.975))
   return(interval[1])
 })
 inter_coeff_lower_interval_BMI <- inter_coeff_lower_interval[4,,]
 
 inter_coeff_upper_interval <- apply(gibbs_out$inter_coeff_st, c(2, 3, 4), function(x){
-  interval <- quantile(x, probs = c(0.025, 0.075))
+  interval <- quantile(x, probs = c(0.025, 0.975))
   return(interval[2])
 })
 inter_coeff_upper_interval_BMI <- inter_coeff_upper_interval[4,,]
@@ -101,7 +101,7 @@ for (i in 1:tmp_nrow) {
 signif_inter_BMI <- matrix(data = NA, nrow = sum(mat_select_BMI), ncol = 1)
 for (i in 1:tmp_nrow) {
   for (i in 1:tmp_ncol) {
-    if (mat_select_BMI[i, j] = 1) {
+    if (mat_select_BMI[i, j] == 1) {
       ### How to deal with symmetry here when considering credible intervals for interactions? ###
     }
   }
@@ -116,13 +116,13 @@ plot(c(true_coeff_est_BMI))
 
 # 95% Credible intervals for main effects-------
 main_coeff_lower_interval <- apply(gibbs_out$coeff_st, c(2, 3), function(x){
-  interval <- quantile(x, probs = c(0.025, 0.075))
+  interval <- quantile(x, probs = c(0.025, 0.975))
   return(interval[1])
 })
 main_coeff_lower_interval_BMI <- main_coeff_lower_interval[4,]
 
 main_coeff_upper_interval <- apply(gibbs_out$coeff_st, c(2, 3), function(x){
-  interval <- quantile(x, probs = c(0.025, 0.075))
+  interval <- quantile(x, probs = c(0.025, 0.975))
   return(interval[2])
 })
 main_coeff_upper_interval_BMI <- main_coeff_upper_interval[4,]
