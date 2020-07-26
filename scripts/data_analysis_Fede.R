@@ -202,7 +202,7 @@ n_samples = nrun - burn
 gibbs_result <- gibbs(X = X_hollow, Y = Y_hollow,
                       X_NA = X_NA, Y_NA = Y_NA, X_LOD = X_LOD, LOD_X_vec = LOD_X_vec, Z = Z,
                       nrun = nrun, burn = burn, thin = 1, alpha_prior = NULL, theta_inf = 0.05,
-                      k = 32, m = 2, a = 1/2, delta_rw = 0.5)
+                      k = 15, m = 2, a = 1/2, delta_rw = 0.5)
 
 results_dir="/work/sta790/ff31/SEM/"
 saveRDS(gibbs_result, file.path(results_dir, "gibbs_results_Fede.rds"))
