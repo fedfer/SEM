@@ -32,6 +32,56 @@ df_chem_log = df_chem %>%
   mutate(SEQN = df_chem$SEQN) %>% #so we append new column named SEQN to the end of dataset
   dplyr::select(- "df_chem$SEQN") #and delete column with ugly name
 
+# Plot histogram (comment out for server)--------------------------
+# df_chem_log[,1:10] %>%
+#   gather() %>%
+#   ggplot(aes(value)) +
+#   facet_wrap(~ key, scales = "free") +
+#   geom_histogram()
+
+
+# Throw away explanatory variables that are not normally distributed (metal)--------------------------
+# variables thrown away: "LBXBCD", "LBXBCR", "LBXBGE", "LBXBGM", "LBXIHG", "LBXTHG", "URXUAB",
+# "URXUAC", "URXUAS3", "URXUAS5", "URXUCD", "URXUDMA", "URXUHG", "URXUMMA", "URXUMN"
+# df_metals = df_metals %>%
+#   dplyr::select(- c("LBXBCD", "LBXBCR", "LBXBGE", "LBXBGM", "LBXIHG",
+#                 "LBXTHG", "URXUAB", "URXUAC", "URXUAS3", "URXUAS5", "URXUCD", 
+#                 "URXUDMA", "URXUHG", "URXUMMA", "URXUMN"))
+# 
+# df_metals_log = df_metals_log %>%
+#   dplyr::select(- c("LBXBCD", "LBXBCR", "LBXBGE", "LBXBGM", "LBXIHG",
+#               "LBXTHG", "URXUAB", "URXUAC", "URXUAS3", "URXUAS5", "URXUCD", 
+#               "URXUDMA", "URXUHG", "URXUMMA", "URXUMN"))
+
+
+# Throw away explanatory variables that are not normally distributed (chem)--------------------------
+# Variables thrown away: "LBXBCO", "LBXBCR", "LBXCOT", "LBXHCT", "URXANBT", 
+#                         "URXCOTT", "URXHCTT", "URDTNE2", "URXANTT", "URXNICT", 
+#                         "URXNNCT", "LBDWFL", "URX4MDA", "URX4TDA", "URX5NDA", 
+#                         "URX6TDA", "URXPPDA", "LBDSF1LC", "LBDSF2LC", "LBDSF3LC", 
+#                       "LBDSF4LC", "LBDSF5LC", "LBDSF6LC", "LBXIHG", "LBXBCD", "LBXBGE", 
+#                           "LBXBGM", "LBXTHG", "URXUCD", "URXUHG", "URXUMN", "URXUSB", "URXUTU",
+#                             "LBXMPAH", "LBXPFDE", "LBXPFHS", "SSACET", "SSAND", "SSCLOT", 
+#                           "SSIMID", "SSOHIM", "SSTHIA", "URXUUR", "LBXBFOA", "LBXPFDO", 
+#                             "LBXPFUA", "URXMC1", "URXMCOH", "URXMHBP", "URXMHNC", "URXMHP", 
+#                             "LBXTST", "URXMNP", "URXUAB", "URXUAC", "URXUAS3", "URXUAS5", "URXUDMA", "URXUMMA", 
+#                             "LBX2DF", "LBX4CE", "LBXEST", "LBXV06", "LBXV07N", "LBXV08N",
+#                               "LBXV3B", "LBXV4C", "URXUTRI"
+# LBXVBF:LBXVDB
+# LBXVDE:LBXVMC
+# LBXVMCP:LBXVTP
+# "LBXVVB", "LBXVXY", "URXBPM", "URXCYHA", "URXCYM", "URX1DC", "URX2DC", "URXDPM", "URXGAM", "URXIPM1", "URXIPM3", "URXMB1", "URXMB2", "URXPHE", "URXPMA", "URXTCV"
+
+
+# # Log transform chemicals--------------------------
+# TODO: maybe we want to log transform some of the outcomes and some of the covariates
+df_chem_log = df_chem %>% 
+  dplyr::select(-SEQN) %>% 
+  log(., base = 10) %>% 
+  cbind(df_chem$SEQN, .) %>%  #but the name of the column is not pretty
+  mutate(SEQN = df_chem$SEQN) %>% #so we append new column named SEQN to the end of dataset
+  dplyr::select(- "df_chem$SEQN") #and delete column with ugly name
+
 df_chem_log <- df_chem_log %>%
   dplyr::select(-c("LBXBCO", "LBXBCR", "LBXCOT", "LBXHCT", "URXANBT", "URXCOTT", "URXHCTT", "URDTNE2", "URXANTT", "URXNICT", "URXNNCT", "LBDWFL", "URX4MDA", "URX4TDA", "URX5NDA", "URX6TDA", "URXPPDA", "LBDSF1LC", "LBDSF2LC", "LBDSF3LC", "LBDSF4LC", "LBDSF5LC", "LBDSF6LC", "LBXIHG", "LBXBCD", "LBXBGE", "LBXBGM", "LBXTHG", "URXUCD", "URXUHG", "URXUMN", "URXUSB", "URXUTU", "LBXMPAH", "LBXPFDE", "LBXPFHS", "SSACET", "SSAND", "SSCLOT", "SSIMID", "SSOHIM", "SSTHIA", "URXUUR", "LBXBFOA", "LBXPFDO", "LBXPFUA", "URXMC1", "URXMCOH", "URXMHBP", "URXMHNC", "URXMHP", "LBXTST", "URXMNP", "URXUAB", "URXUAC", "URXUAS3", "URXUAS5", "URXUDMA", "URXUMMA", "LBX2DF", "LBX4CE", "LBXEST", "LBXV06", "LBXV07N", "LBXV08N", "LBXV3B", "LBXV4C", "URXUTRI"))
 
@@ -146,8 +196,8 @@ sum(vec > 0.9)
 
 
 # Gibbs ------------------------------------------
-nrun = 100
-burn = 50
+nrun = 1000
+burn = 500
 n_samples = nrun - burn
 gibbs_result <- gibbs(X = X_hollow, Y = Y_hollow,
                       X_NA = X_NA, Y_NA = Y_NA, X_LOD = X_LOD, LOD_X_vec = LOD_X_vec, Z = Z,
