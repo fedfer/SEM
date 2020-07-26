@@ -368,7 +368,7 @@ gibbs <- function(X, Y, X_NA, Y_NA, X_LOD, LOD_X_vec, Z, nrun, burn, thin = 1,
               xi_st = xi_st,
               coeff_st = coeff_st,
               Omegas_st = Omegas_st,
-              acp = acp/(nrun-burn),
+              # acp = acp/(nrun-burn),
               inter_coeff_st = inter_coeff_st,
               inter_cov_coeff_st = inter_cov_coeff_st
   ))

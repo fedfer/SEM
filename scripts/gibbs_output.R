@@ -1,17 +1,11 @@
 library(ggplot2)
 library(infinitefactor)
 
-gibbs_out <- readRDS(file = "gibbs_results_Feder.rds")  # I didn't store loadings matrix and latent variables in this run
-
+gibbs_out <- readRDS(file = "gibbs_results_Fede.rds")  # I didn't store loadings matrix and latent variables in this run
+str(gibbs_out)
 plot(gibbs_out$acp) # Problem with storing acp in gibbs sampler
 
 iterations <- dim(gibbs_out$Phi_st)[1]
-
-# par(mfrow=c(2,2))
-# plot(x = 1:500, y = gibbs_out$Phi_st[, 1, 1])
-# plot(x = 1:500, y = gibbs_out$Phi_st[, 2, 2])
-# plot(x = 1:500, y = gibbs_out$Phi_st[, 3, 3])
-# plot(x = 1:500, y = gibbs_out$Phi_st[, 4, 4])
 
 # index <- 1
 # for (i in 1:dim(gibbs_out$Phi_st)[2]) {
@@ -22,7 +16,6 @@ iterations <- dim(gibbs_out$Phi_st)[1]
 #   }
 # }
 # rm(index)
-
 
 par(mfrow=c(2,2))
 for (i in 1:4) {
@@ -55,7 +48,6 @@ for (i in 1:p) {
 # dev.off()
 
 vec_true_inter_coeff_est_BMI <- c(true_inter_coeff_est_BMI) # vectorize
-
 
 plot(vec_true_inter_coeff_est_BMI)
 
