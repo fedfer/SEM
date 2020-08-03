@@ -207,6 +207,8 @@ Y <- df[, 1:4]
 Z <- imp[, 1:(1+ncol(df_cov)-1-1)]
 Z <- as.matrix(Z)
 X <- df[,(ncol(Y) + ncol(Z) + 1):ncol(df)]
+saveRDS(X, "X.rds") # save to use in competitor methods
+saveRDS(Y, "Y.rds")
 
 # Center Y and X ----
 X_scaled <- scale(X, scale = TRUE)
