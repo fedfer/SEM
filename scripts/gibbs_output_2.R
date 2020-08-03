@@ -12,17 +12,18 @@ iterations <- dim(gibbs_out$Phi_st)[1]
 
 # Examine the loadings matrices lambda using infinitefactor package-----
 
-# loading matrix for the outcome Y
-Lambda_y_est <- apply(gibbs_out$Lambda_y_st, c(2, 3), mean) # first get posterior mean as estimate
-plotmat(varimax(Lambda_y_est)[[1]])
-
 # Aligned for X
+Lambda_x_est <- apply(gibbs_out$Lambda_x_st, c(2, 3), mean) # first get posterior mean as estimate
+plotmat(varimax(Lambda_x_est)[[1]])
 eta_list = lapply(seq_len(dim(gibbs_out$eta_st)[1]), function(i) gibbs_out$eta_st[i,,]) 
 Lambda_x_list = lapply(seq_len(dim(gibbs_out$Lambda_x_st)[1]), function(i) gibbs_out$Lambda_x_st[i,,]) 
 aligned_x = jointRot(Lambda_x_list, eta_list)
 plotmat(lmean(aligned_x$lambda))
 
+
 # Aligned for Y
+Lambda_y_est <- apply(gibbs_out$Lambda_y_st, c(2, 3), mean) # first get posterior mean as estimate
+plotmat(varimax(Lambda_y_est)[[1]])
 xi_list = lapply(seq_len(dim(gibbs_out$xi_st)[1]), function(i) gibbs_out$xi_st[i,,]) 
 Lambda_y_list = lapply(seq_len(dim(gibbs_out$Lambda_y_st)[1]), function(i) gibbs_out$Lambda_y_st[i,,]) 
 aligned_y = jointRot(Lambda_y_list, xi_list)
