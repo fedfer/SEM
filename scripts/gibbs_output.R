@@ -1,21 +1,16 @@
 library(ggplot2)
 library(infinitefactor)
 
-gibbs_out <- readRDS(file = "results/gibbs_results_Fede.rds")  # I didn't store loadings matrix and latent variables in this run
+# gibbs_out <- readRDS(file = "results/gibbs_results_Fede.rds")  # I didn't store loadings matrix and latent variables in this run
+gibbs_out <- readRDS(file = "gibbs_results.rds")
 str(gibbs_out)
 plot(gibbs_out$acp) # Problem with storing acp in gibbs sampler
 
 iterations <- dim(gibbs_out$Phi_st)[1]
 
-# index <- 1
-# for (i in 1:dim(gibbs_out$Phi_st)[2]) {
-#   for (j in 1:dim(gibbs_out$Phi_st)[3]) {
-#     p <- ggplot(x = 1:500, y = gibbs_out$Phi_st[, i, j])
-#     assign(paste0('p', index), p)
-#     index <- index + 1
-#   }
-# }
-# rm(index)
+chem_names <- read.table("chem_names_test.txt")
+chem_names <- as.vector(chem_names[,1])
+
 
 par(mfrow=c(2,2))
 for (i in 1:4) {
@@ -44,60 +39,91 @@ for (i in 1:p) {
   }
 }
 
-# heatmap(true_inter_coeff_est_BMI)
-# dev.off()
 
 vec_true_inter_coeff_est_BMI <- c(true_inter_coeff_est_BMI) # vectorize
 
 plot(vec_true_inter_coeff_est_BMI)
 
-# values of coefficients greater than 0.05
-# inter_coeff_est_BMI_0.05 <- true_inter_coeff_est_BMI
-# inter_coeff_est_BMI_0.05[abs(inter_coeff_est_BMI_0.05) < 0.05]=0 
-# plot(c(inter_coeff_est_BMI_0.05))
-# 
-# dev.off()
-
-# values of coefficients greater than 0.1                 
-# inter_coeff_est_BMI_0.1 <- true_inter_coeff_est_BMI
-# inter_coeff_est_BMI_0.1[abs(inter_coeff_est_BMI_0.1) < 0.1]=0 
-# plot(c(inter_coeff_est_BMI_0.1))
 
 # 95% Credible intervals for interactions coefficients-------
+
+# lower intervals
 inter_coeff_lower_interval <- apply(gibbs_out$inter_coeff_st, c(2, 3, 4), function(x){
   interval <- quantile(x, probs = c(0.025, 0.975))
   return(interval[1])
 })
 inter_coeff_lower_interval_BMI <- inter_coeff_lower_interval[4,,]
+# add up symmetric lower intervals
+inter_coeff_lower_interval_BMI_upper_tri <- matrix(data = 0, nrow = nrow(inter_coeff_lower_interval_BMI), 
+                                                   ncol = ncol(inter_coeff_lower_interval_BMI))
+for (i in 1:nrow(inter_coeff_lower_interval_BMI_upper_tri)) {
+  for (j in i:ncol(inter_coeff_lower_interval_BMI_upper_tri)) {
+    if (i != j) {
+      inter_coeff_lower_interval_BMI_upper_tri[i, j] <- inter_coeff_lower_interval_BMI[i, j] + inter_coeff_lower_interval_BMI[j, i]
+    }
+    else {
+      inter_coeff_lower_interval_BMI_upper_tri[i, j] <- inter_coeff_lower_interval_BMI[i, j]
+    }
+  }
+}
 
+# upper intervals
 inter_coeff_upper_interval <- apply(gibbs_out$inter_coeff_st, c(2, 3, 4), function(x){
   interval <- quantile(x, probs = c(0.025, 0.975))
   return(interval[2])
 })
 inter_coeff_upper_interval_BMI <- inter_coeff_upper_interval[4,,]
+# add up symmetric upper intervals
+inter_coeff_upper_interval_BMI_upper_tri <- matrix(data = 0, nrow = nrow(inter_coeff_upper_interval_BMI), 
+                                                   ncol = ncol(inter_coeff_upper_interval_BMI))
+for (i in 1:nrow(inter_coeff_upper_interval_BMI_upper_tri)) {
+  for (j in i:ncol(inter_coeff_upper_interval_BMI_upper_tri)) {
+    if (i != j) {
+      inter_coeff_upper_interval_BMI_upper_tri[i, j] <- inter_coeff_upper_interval_BMI[i, j] + inter_coeff_upper_interval_BMI[j, i]
+    }
+    else {
+      inter_coeff_upper_interval_BMI_upper_tri[i, j] <- inter_coeff_upper_interval_BMI[i, j]
+    }
+  }
+}
 
 # sanity check on the intervals
 sum((inter_coeff_upper_interval_BMI - inter_coeff_lower_interval_BMI) < 0) # passed
+sum((inter_coeff_upper_interval_BMI_upper_tri - inter_coeff_lower_interval_BMI_upper_tri) < 0) # passed
+
 
 # interaction coefficients with 0 not in credible interval-----
 tmp_nrow = nrow(true_inter_coeff_est_BMI)
 tmp_ncol = ncol(true_inter_coeff_est_BMI)
 mat_select_BMI <- matrix(data = 0, nrow = tmp_nrow, ncol = tmp_ncol) # Quick way to select entrie using zero one or true false matrix?
 for (i in 1:tmp_nrow) {
-  for (j in 1:tmp_ncol) {
-    if (0 < inter_coeff_lower_interval_BMI[i, j] | 0 > inter_coeff_upper_interval_BMI[i, j]) {
+  for (j in i:tmp_ncol) {
+    if (0 < inter_coeff_lower_interval_BMI_upper_tri[i, j] | 0 > inter_coeff_upper_interval_BMI_upper_tri[i, j]) {
       mat_select_BMI[i, j] = 1
     }
   }
 }
-signif_inter_BMI <- matrix(data = NA, nrow = sum(mat_select_BMI), ncol = 1)
+sum(mat_select_BMI) #number of interactions selected
+
+signif_inter_BMI <- matrix(data = NA, nrow = sum(mat_select_BMI), ncol = 5)
+colnames(signif_inter_BMI) <- c("chem_inter_name", "coeff", "lower_interval", "upper_interval", "method")
+
+# examine upper triangular part
+count <- 1
+
 for (i in 1:tmp_nrow) {
-  for (i in 1:tmp_ncol) {
+  for (j in i:tmp_ncol) {
     if (mat_select_BMI[i, j] == 1) {
-      ### How to deal with symmetry here when considering credible intervals for interactions? ###
+      signif_inter_BMI[count, "chem_inter_name"] <- paste(chem_names[i], "x", chem_names[j])
+      signif_inter_BMI[count, "coeff"] <- true_inter_coeff_est_BMI[i, j]
+      signif_inter_BMI[count, "lower_interval"] <- inter_coeff_lower_interval_BMI_upper_tri[i, j]
+      signif_inter_BMI[count, "upper_interval"] <- inter_coeff_upper_interval_BMI_upper_tri[i, j]
+      signif_inter_BMI[count, "method"] <- "SEM" 
+      count <- count + 1
     }
   }
 }
+
 
 
 # Main effects-------------------
@@ -127,30 +153,48 @@ for (i in 1:tmp_length) {
     vec_select_BMI[i] = 1
   }
 }
-signif_main_BMI <- matrix(data = NA, nrow = sum(vec_select_BMI), ncol = 1)
-rownames_signif_main_BMI <- vector(mode = "character", length = nrow(signif_main_BMI))
+signif_main_BMI <- matrix(data = NA, nrow = sum(vec_select_BMI), ncol = 5)
+colnames(signif_main_BMI) <- c("chem_name", "coeff", "lower_interval", "upper_interval", "method")
+#rownames_signif_main_BMI <- vector(mode = "character", length = nrow(signif_main_BMI))
 j <- 1
 for (i in 1:tmp_length) {
   if (vec_select_BMI[i] == 1) {
-    signif_main_BMI[j, 1] = true_coeff_est_BMI[i]
-    rownames_signif_main_BMI[j] <- chem_names[i]
+    signif_main_BMI[j, "coeff"] <- true_coeff_est_BMI[i]
+    signif_main_BMI[j, "chem_name"] <- chem_names[i]
+    signif_main_BMI[j, "lower_interval"] <- main_coeff_lower_interval_BMI[i]
+    signif_main_BMI[j, "upper_interval"] <- main_coeff_upper_interval_BMI[i]
     j <- j + 1
   }
 }
-rownames(signif_main_BMI) <- rownames_signif_main_BMI
-signif_main_BMI
+signif_main_BMI[, "method"] <- rep("SEM", times = nrow(signif_main_BMI))
 
 
 
+#convert to df-----
+#convert main to df
+df_signif_main_BMI <- as.data.frame(signif_main_BMI)
+df_signif_main_BMI[, 2:4] <- lapply(df_signif_main_BMI[, 2:4], function(x) as.numeric(as.character(x)))
 
-# Get chemical names for main effects------------
-coeff_est_BMI_0.05 <- true_coeff_est_BMI
-coeff_est_BMI_0.05[abs(true_coeff_est_BMI) < 0.05]=0
-plot(coeff_est_BMI_0.05)
-chem_names[coeff_est_BMI_0.05 != 0]
+#convert interactions to df
+df_signif_inter_BMI <- as.data.frame(signif_inter_BMI)
+df_signif_inter_BMI[, 2:4] <- lapply(df_signif_inter_BMI[, 2:4], function(x) as.numeric(as.character(x)))
+
+
 
 # Get chemical names for interactions-----------
 
-# Analysis for Lambda-----
+
+# Visualizations-----
+ggplot(df_signif_main_BMI, aes(x=chem_name, y=coeff)) + 
+  geom_pointrange(aes(ymin=lower_interval, ymax=upper_interval)) +
+  scale_y_continuous(breaks = round(seq(min(df_signif_main_BMI$lower_interval), max(df_signif_main_BMI$upper_interval), by = 0.005),2)) +
+  theme(axis.text.x = element_text(angle=45))
+
+ggplot(df_signif_inter_BMI, aes(x=chem_inter_name, y=coeff)) + 
+  geom_pointrange(aes(ymin=lower_interval, ymax=upper_interval)) +
+  scale_y_continuous(breaks = round(seq(min(df_signif_inter_BMI$lower_interval), max(df_signif_inter_BMI$upper_interval), by = 0.005),2)) +
+  theme(text = element_text(size = 8),
+        axis.text.x = element_text(angle=90))
+#fix the zero-one selection matrix for interaction elements
 
 
