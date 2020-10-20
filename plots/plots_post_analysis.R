@@ -4,12 +4,12 @@ library(ggplot2)
 library(infinitefactor)
 
 gibbs <- readRDS(file = "results/gibbs_results.rds")
-str(gibbs_out)
+str(gibbs)
 
-# BMI plots
-bmi_comp <- readRDS(file = "results/bmi_competitors.rds")
+# Lambda samples (need to be saved)
 
-# Plot main effects
+
+# Get main for MQR-SEM
 names = read.table("chem_names_test.txt")
 label = "MQR-SEM"
 beta_hat = apply(gibbs$coeff_st[,4,], 2, mean)
@@ -19,6 +19,9 @@ gibbs_plot = data.frame(Values = beta_hat,
                         Variables = names,
                         model = label,
                         q_inf = q_inf, q_sup = q_sup)
+
+# Competitors
+bmi_comp <- readRDS(file = "results/bmi_competitors.rds")
 p <- length(beta_hat)
 # label = "PIE"
 # PIE_plot = data.frame(Values = PIE$beta[1:p], Variables = names,model = label, q_inf = PIE$beta[1:p],
@@ -47,7 +50,7 @@ hiernet_err <- hiernet$err_pred ^.2 %>% mean()
 # y_hat = gibbs$y_pred %>% apply(. , 2, mean)
 # (y - y_hat) %>% .^2 %>% mean()
 
-# PLOT of MAin Effects
+# PLOT of Main Effects
 beta_plot = rbind(gibbs_plot,#PIE_plot,
                   #RAMP_plot,
                   Family_plot,hiernet_plot)

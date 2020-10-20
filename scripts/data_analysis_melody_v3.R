@@ -173,7 +173,7 @@ df_chem_log <- df_chem_log %>%
                    "URXIPM1", "URXIPM3", "URXMB1", 
                    "URXMB2", "URXPHE", "URXPMA", 
                    "URXTCV", "LBXFER","LBXGH",
-                   "URXUIO",
+                   "URXUIO","URDTNE6", "URDTNE7"
                    ))
 
 
