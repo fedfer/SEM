@@ -167,12 +167,26 @@ df_chem_log <- df_chem_log %>%
   dplyr::select(-(LBXVMCP:LBXVTP))
 
 df_chem_log <- df_chem_log %>%
-  dplyr::select(-c("LBXVVB", "LBXVXY", "URXBPM", "URXCYHA", "URXCYM", "URX1DC", "URX2DC", "URXDPM", "URXGAM", "URXIPM1", "URXIPM3", "URXMB1", "URXMB2", "URXPHE", "URXPMA", "URXTCV"))
+  dplyr::select(-c("LBXVVB", "LBXVXY", "URXBPM",
+                   "URXCYHA", "URXCYM", "URX1DC", 
+                   "URX2DC", "URXDPM", "URXGAM", 
+                   "URXIPM1", "URXIPM3", "URXMB1", 
+                   "URXMB2", "URXPHE", "URXPMA", 
+                   "URXTCV", "LBXFER","LBXGH",
+                   "URXUIO",
+                   ))
 
 
 # Examine covariates ------------------
 # summary(df_cov)
-df_cov <- df_cov %>% dplyr::select(-c("DMDEDUC3", "DMDEDUC2", "DMDMARTL", "RIDEXPRG", "LBXAPB", "URXUAS", "URXUCL")) # remove covariates with too many missing values
+df_cov <- df_cov %>% dplyr::select(-c("DMDEDUC2", "DMDMARTL", "RIDEXPRG", 
+                                      "LBXAPB", "URXUAS", "URXUCL",
+                                      "LBXSATSI", "LBXSAL", "LBXSAPSI",
+                                      "LBXSASSI", "LBXSC3SI", "LBXSBU",
+                                      "LBXSCLSI","LBXSBU","LBXSCLSI","LBXSCH",
+                                      "LBXSCK","LBXSCR","LBXSGTSI","LBXSGL","LBXSIR", 
+                                      "LBXSPH","LBXSKSI","LBXSNASI","LBXSTB","LBXSCA",
+                                      "LBXSTP")) # remove covariates with too many missing values
 
 
 # Outcomes------------------------

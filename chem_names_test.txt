@@ -8,12 +8,9 @@ tne3
 tne6
 tne7
 deet
-ferritin
 flouride
 rbc_folate
 total_folate
-glycohemoglobin
-iodine
 lead_blood
 selenium_blood
 manganese_blood
