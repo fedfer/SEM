@@ -179,7 +179,7 @@ df_chem_log <- df_chem_log %>%
 
 # Examine covariates ------------------
 # summary(df_cov)
-df_cov <- df_cov %>% dplyr::select(-c("DMDEDUC2", "DMDMARTL", "RIDEXPRG", 
+df_cov <- df_cov %>% dplyr::select(-c("DMDEDUC3","DMDEDUC2", "DMDMARTL", "RIDEXPRG", 
                                       "LBXAPB", "URXUAS", "URXUCL",
                                       "LBXSATSI", "LBXSAL", "LBXSAPSI",
                                       "LBXSASSI", "LBXSC3SI", "LBXSBU",
