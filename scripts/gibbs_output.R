@@ -2,7 +2,7 @@ library(ggplot2)
 library(infinitefactor)
 
 # gibbs_out <- readRDS(file = "results/gibbs_results_Fede.rds")  # I didn't store loadings matrix and latent variables in this run
-gibbs_out <- readRDS(file = "gibbs_results.rds")
+gibbs_out <- readRDS(file = "results/gibbs_results.rds")
 str(gibbs_out)
 plot(gibbs_out$acp) # Problem with storing acp in gibbs sampler
 
