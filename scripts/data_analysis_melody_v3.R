@@ -318,7 +318,7 @@ n_samples = nrun - burn
 gibbs_result <- gibbs(X = X_hollow, Y = Y_hollow,
                       X_NA = X_NA, Y_NA = Y_NA, X_LOD = X_LOD, LOD_X_vec = LOD_X_vec, Z = Z,
                       nrun = nrun, burn = burn, thin = 1, alpha_prior = NULL, theta_inf = 0.05,
-                      k = 32, m = 2, a = 1/2, delta_rw = 0.1) # maybe startoff delta_rw as 0.05, acceptance rate high at first then became too low for 0.1
+                      k = 25, m = 2, a = 1/2, delta_rw = 0.1) # maybe startoff delta_rw as 0.05, acceptance rate high at first then became too low for 0.1
 
 results_dir="/work/yj90/SEM/"
 saveRDS(gibbs_result, file.path(results_dir, "gibbs_results_melody_3.rds"))

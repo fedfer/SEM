@@ -215,7 +215,7 @@ gibbs <- function(X, Y, X_NA, Y_NA, X_LOD, LOD_X_vec, Z, nrun, burn, thin = 1,
       # tau[j] = GIGrvg::rgig(n=1,lambda = 1-m, psi = 1, 
       #                       chi = 2*sum(abs(Lambda_y[j,])/zetajh[j,]))
       tau[j] = GIGrvg::rgig(n=1,lambda = m/2-m, psi = 1, 
-                            chi = 2*sum(abs(Lambda_y[,j])/zetajh[,j]))
+                            chi = 2*sum(abs(Lambda_y[j,])/zetajh[j,]))
 
     }
     

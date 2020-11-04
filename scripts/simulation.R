@@ -15,7 +15,7 @@ etai_Omega_etai <- function(Omega, etai){
 }
 
 
-#I used simulation in "profiling.R" for ease
+rm#I used simulation in "profiling.R" for ease
 #Segment fault occured when running bcorsis on server using the real data set
 #Testing method of Pan 2019 using this smaller dataset.
 bcorsis_res <- bcorsis(y = Y, x = X)
